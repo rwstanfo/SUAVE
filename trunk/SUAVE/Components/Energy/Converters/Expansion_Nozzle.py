@@ -135,8 +135,7 @@ class Expansion_Nozzle(Energy_Component):
         Pt_out   = Pt_in*pid
         Tt_out   = Tt_in*pid**((gamma-1)/(gamma)*etapold)
         ht_out   = Cp*Tt_out
-        
-        
+
         #compute the output Mach number, static quantities and the output velocity
         Mach          = np.sqrt((((Pt_out/Po)**((gamma-1)/gamma))-1)*2/(gamma-1))
         
@@ -145,8 +144,8 @@ class Expansion_Nozzle(Energy_Component):
         i_high        = Mach >=1.0
         
         #initializing the Pout array
-        P_out         = 1.0 *Mach/Mach
-        
+        P_out         = np.ones_like(Mach)
+
         #Computing output pressure and Mach number for the case Mach <1.0
         P_out[i_low]  = Po[i_low]
         Mach[i_low]   = np.sqrt((((Pt_out[i_low]/Po[i_low])**((gamma[i_low]-1.)/gamma[i_low]))-1.)*2./(gamma[i_low]-1.))

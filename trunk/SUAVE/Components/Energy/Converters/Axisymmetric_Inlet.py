@@ -1,7 +1,7 @@
 ## @ingroup Components-Energy-Converters
-# Pitot_Inlet.py
+# Axisymmetric_Inlet.py
 #
-# Created:  May 2019, M. Dethy
+# Created:  July 2019, M. Dethy
 
 # ----------------------------------------------------------------------
 #  Imports
@@ -15,16 +15,15 @@ from warnings import warn
 # package imports
 import numpy as np
 
-from SUAVE.Core import Data
 from SUAVE.Components.Energy.Energy_Component import Energy_Component
-from SUAVE.Methods.Aerodynamics.Common.Gas_Dynamics import Oblique_Shock, Isentropic
+from SUAVE.Methods.Aerodynamics.Common.Gas_Dynamics import Oblique_Shock, Isentropic, Conical_Shock
 
 # ----------------------------------------------------------------------
-#  Pitot Inlet Component
+#  Axisymmetric Inlet Component
 # ----------------------------------------------------------------------
 ## @ingroup Components-Energy-Converters
-class Pitot_Inlet(Energy_Component):
-    """This is a pitot inlet component intended for use in compression.
+class Axisymmetric_Inlet(Energy_Component):
+    """This is a two dimensional inlet component intended for use in compression.
     Calling this class calls the compute function.
 
     Source:
@@ -50,11 +49,14 @@ class Pitot_Inlet(Energy_Component):
         None
         """
         # setting the default values
-        self.tag = 'pitot_inlet'
+        self.tag = 'axisymmetric_inlet'
         self.areas                           = Data()
         self.areas.capture                   = 0.0
         self.areas.throat                    = 0.0
         self.areas.inlet_entrance            = 0.0
+        self.areas.drag_direct_projection    = 0.0
+        self.angles                          = Data()
+        self.angles.cone_half_angle          = 0.0
         self.inputs.stagnation_temperature   = np.array([0.0])
         self.inputs.stagnation_pressure      = np.array([0.0])
         self.outputs.stagnation_temperature  = np.array([0.0])
@@ -103,8 +105,8 @@ class Pitot_Inlet(Energy_Component):
         # unpack from conditions
         gamma = conditions.freestream.isentropic_expansion_factor
         Cp = conditions.freestream.specific_heat_at_constant_pressure
-        Po = conditions.freestream.pressure
-        M0 = np.atleast_2d(conditions.freestream.mach_number)
+        P0 = conditions.freestream.pressure
+        M0 = conditions.freestream.mach_number
         R = conditions.freestream.gas_specific_constant
 
         # unpack from inputs
@@ -112,65 +114,66 @@ class Pitot_Inlet(Energy_Component):
         Pt_in = self.inputs.stagnation_pressure
 
         # unpack from self
-        A0 = conditions.freestream.area_initial_streamtube
+        A0 = conditions.area_initial_freestream
         AE = self.areas.capture # engine face area
         AC = self.areas.throat # narrowest part of inlet
+        theta = self.angles.cone_half_angle # incoming angle for the shock in degrees
         
         # Compute the mass flow rate into the engine
         T               = Isentropic.isentropic_relations(M0, gamma)[0]*Tt_in
         v               = np.sqrt(gamma*R*T)*M0
         mass_flow_rate  = conditions.freestream.density * A0 * v
+        q_0             = 1/2 * conditions.freestream.density * v**2
 
         f_M0            = Isentropic.isentropic_relations(M0, gamma)[-1]
         f_ME_isentropic = (f_M0 * A0)/AE
-        
-        f_MC_isentropic = (f_M0 * A0)/AC
-        i_sub_shock     = np.logical_and(M0 <= 1.0, f_MC_isentropic > 1)
-        i_sub_no_shock  = np.logical_and(M0 <= 1.0, f_MC_isentropic <= 1)
+        i_sub           = M0 <= 1.0
         i_sup           = M0 > 1.0
         
+        # This 
         if len(Pt_in) == 1:
-            Pt_in = np.asscalar(Pt_in)*np.ones_like(M0)
+            Pt_in = Pt_in[0]*np.ones_like(M0)
         if len(Tt_in) == 1:
-            Tt_in = np.asscalar(Tt_in)*np.ones_like(M0)
-            
+            Tt_in = Tt_in[0]*np.ones_like(M0)
+        
         # initializing the arrays
-        Tt_out  = Tt_in
-        ht_out  = Cp*Tt_in
-        Pt_out  = np.ones_like(M0)
-        Mach    = np.ones_like(M0)
-        T_out   = np.ones_like(M0)
-        f_ME    = np.ones_like(M0)
-        MC      = np.ones_like(M0)
-        Pr_c    = np.ones_like(M0)
-        Tr_c    = np.ones_like(M0)
-        Ptr_c   = np.ones_like(M0)
-        f_MC    = np.ones_like(M0)
-        
-        # Conservation of mass properties to evaluate subsonic case
-        Pt_out[i_sub_no_shock]   = Pt_in[i_sub_no_shock]
-        f_ME[i_sub_no_shock]     = f_ME_isentropic[i_sub_no_shock]
-        Mach[i_sub_no_shock]     = Isentropic.get_m(f_ME[i_sub_no_shock], gamma[i_sub_no_shock], 1)
-        T_out[i_sub_no_shock]    = Isentropic.isentropic_relations(Mach[i_sub_no_shock], gamma[i_sub_no_shock])[0]*Tt_out[i_sub_no_shock]
+        Tt_out          = Tt_in
+        ht_out          = Cp*Tt_in
+        Pt_out          = np.ones_like(Pt_in)
+        Mach            = np.ones_like(Pt_in)
+        T_out           = np.ones_like(Pt_in)
+        f_ME            = np.ones_like(Pt_in)
+        MC              = np.ones_like(Pt_in)
+        Ms              = np.ones_like(Pt_in)
+        beta            = np.ones_like(Pt_in)
+        MC_wedge        = np.ones_like(Pt_in)
+        Pr_c            = np.ones_like(Pt_in)
+        Tr_c            = np.ones_like(Pt_in)
+        Pt_th           = np.ones_like(Pt_in)
+        f_MC            = np.ones_like(Pt_in)
+        Pt_1_ov_Pt_th   = np.ones_like(Pt_in)
 
-        
-        # Analysis of shocks for subsonic flow with shock in inlet
-        MC[i_sub_shock], Pr_c[i_sub_shock], Tr_c[i_sub_shock], Ptr_c[i_sub_shock] = Oblique_Shock.oblique_shock_relations(M0[i_sub_shock],gamma[i_sub_shock],0,90*np.pi/180.)
-        Pt_out[i_sub_shock] = Ptr_c[i_sub_shock]*Pt_in[i_sub_shock]
-        f_MC[i_sub_shock] = Isentropic.isentropic_relations(MC[i_sub_shock], gamma[i_sub_shock])[-1]
-        f_ME[i_sub_shock] = f_MC[i_sub_shock]*AC/AE
-        
-        Mach[i_sub_shock] = Isentropic.get_m(f_ME[i_sub_shock], gamma[i_sub_shock], 1)
-        T_out[i_sub_shock] = Isentropic.isentropic_relations(Mach[i_sub_shock], gamma[i_sub_shock])[0]*Tt_out[i_sub_shock]
+        # Conservation of mass properties to evaluate subsonic case
+        Pt_out[i_sub]   = Pt_in[i_sub]
+        f_ME[i_sub]     = f_ME_isentropic[i_sub]
+        Mach[i_sub]     = Isentropic.get_m(f_ME[i_sub], gamma, 1)
+        T_out[i_sub]    = Isentropic.isentropic_relations(Mach[i_sub], gamma)[0]*Tt_out[i_sub]
         
         # Analysis of shocks for the supersonic case
-        MC[i_sup], Pr_c[i_sup], Tr_c[i_sup], Ptr_c[i_sup] = Oblique_Shock.oblique_shock_relations(M0[i_sup],gamma[i_sup],0,90*np.pi/180.)
-        Pt_out[i_sup] = Ptr_c[i_sup]*Pt_in[i_sup]
-        f_MC[i_sup] = Isentropic.isentropic_relations(MC[i_sup], gamma[i_sup])[-1]
+        Ms[i_sup]       = Conical_Shock.get_Ms(M0[i_sup], theta/2)
+        beta[i_sup]     = Conical_Shock.get_beta(M0[i_sup], theta)
+        MC_wedge[i_sup] = Oblique_Shock.oblique_shock_relations(M0[i_sup],gamma,theta,beta)[0]
+        MC              = 0.5 * (Ms[i_sup] + MC_wedge[i_sup])
+        
+        Pt_th[i_sup]         = Conical_Shock.get_Cp(Ms[i_sup], theta)*q0 + P0
+        Pt_1_ov_Pt_th[i_sup] = Oblique_Shock.oblique_shock_relations(MC[i_sup],gamma,0,90)[3]
+        Pt_out[i_sup]        = Pt_th[i_sup] * Pt_1_ov_Pt_th[i_sup]
+        
+        f_MC[i_sup] = Isentropic.isentropic_relations(MC[i_sup], gamma)[-1]
         f_ME[i_sup] = f_MC[i_sup]*AC/AE
         
-        Mach[i_sup] = Isentropic.get_m(f_ME[i_sup], gamma[i_sup], 1)
-        T_out[i_sup] = Isentropic.isentropic_relations(Mach[i_sup], gamma[i_sup])[0]*Tt_out[i_sup]
+        Mach[i_sup] = Isentropic.get_m(f_ME[i_sup], gamma, 1)
+        T_out[i_sup] = Isentropic.isentropic_relations(Mach[i_sup], gamma)[0]*Tt_out[i_sup]
         
         # -- Compute exit velocity and enthalpy
         h_out = Cp * T_out
@@ -186,22 +189,21 @@ class Pitot_Inlet(Energy_Component):
         self.outputs.velocity = u_out
         conditions.mass_flow_rate = mass_flow_rate
         
-    def compute_drag(self, conditions):
-        
+    def _compute_drag(self, conditions):
+
         '''
         Nomenclature/labeling of this section is inconsistent with the above
         but is consistent with Nikolai's methodology as presented in aircraft
         design
         '''
         
-        
         # Unpack constants from freestream conditions
         gamma       = conditions.freestream.isentropic_expansion_factor
         R           = conditions.freestream.gas_specific_constant
         P_inf       = conditions.freestream.pressure
-        M_inf       = np.atleast_2d(conditions.freestream.mach_number)
+        M_inf       = conditions.freestream.mach_number
         rho_inf     = conditions.freestream.density
-
+        
         # unpack from inputs
         Tt_inf = self.inputs.stagnation_temperature
         Pt_inf = self.inputs.stagnation_pressure
@@ -211,25 +213,17 @@ class Pitot_Inlet(Energy_Component):
         v_inf  = np.sqrt(gamma*R*T_inf) * M_inf
         q_inf  = 1/2 * rho_inf * v_inf**2
         f_Minf = Isentropic.isentropic_relations(M_inf, gamma)[-1]
-
+        
         # unpack from self
-        A_inf = conditions.freestream.area_initial_streamtube
-        AC = self.areas.capture # engine face area
-        A1 = self.areas.inlet_entrance # area of the inlet entrance
-        AT = self.areas.throat
-        
-        f_Minf           = Isentropic.isentropic_relations(M_inf, gamma)[-1]
-#        i_sub           = M0 <= 1.0
-#        i_sup           = M0 > 1.0
-        
-        f_MT_isentropic = (f_Minf * A_inf)/AT
-        i_sub_shock     = np.logical_and(M_inf  <= 1.0, f_MT_isentropic > 1)
-        i_sub_no_shock  = np.logical_and(M_inf  <= 1.0, f_MT_isentropic <= 1)
-        i_sup           = M_inf  > 1.0
+        A_inf = conditions.area_initial_freestream
+        AC    = self.areas.capture # engine face area
+        A1    = self.areas.inlet_entrance # area of the inlet entrance
+        theta = self.angles.cone_angle # cone half angle of the inlet
+        AS    = self.areas.drag_direct_projection
         
         # compute A1 quantities
-#        i_sub           = M_inf <= 1.0
-#        i_sup           = M_inf > 1.0
+        i_sub           = M_inf <= 1.0
+        i_sup           = M_inf > 1.0
         
         # initialize values
         f_M1 = np.ones_like(Tt_inf)
@@ -238,36 +232,48 @@ class Pitot_Inlet(Energy_Component):
         M1   = np.ones_like(Tt_inf)
         
         # subsonic case
-        f_M1[i_sub_no_shock]      = (f_Minf[i_sub_no_shock] * A_inf[i_sub_no_shock])/A1
-        M1[i_sub_no_shock]        = Isentropic.get_m(f_M1[i_sub_no_shock], gamma[i_sub_no_shock], 1)
-        P1[i_sub_no_shock]        = Isentropic.isentropic_relations(M1[i_sub_no_shock], gamma[i_sub_no_shock])[1] * Pt_inf[i_sub_no_shock]
+        f_M1[i_sub]      = (f_Minf[i_sub] * A_inf[i_sub])/A1
+        M1[i_sub]        = Isentropic.get_m(f_M1[i_sub], gamma, 1)
+        P1[i_sub]        = Isentropic.isentropic_relations(M1[i_sub], gamma)[1] * Pt_inf[i_sub]
         
         # supersonic case
-        M1[i_sub_shock], Pr_1[i_sub_shock] = Oblique_Shock.oblique_shock_relations(M_inf[i_sub_shock],gamma[i_sub_shock],0,90*np.pi/180.)[0:2]
-        P1[i_sub_shock]              = Pr_1[i_sub_shock]*P_inf[i_sub_shock]
-        
-        # supersonic case
-        M1[i_sup], Pr_1[i_sup] = Oblique_Shock.oblique_shock_relations(M_inf[i_sup],gamma[i_sup],0,90*np.pi/180.)[0:2]
+        M1[i_sup], Pr_1[i_sup] = Oblique_Shock.oblique_shock_relations(M_inf[i_sup],gamma,0,theta)[0:2]
         P1[i_sup]              = Pr_1[i_sup]*P_inf[i_sup]
         
-        # get k_add
-        c1_list =  [-18.89169518, 71.11608826, -98.78321794, 59.30401343, -12.54234863]
-        c2_list = [3.2614414, -15.37113363, 27.9247673, -20.70274059, 4.25466643]
-        c3_list = [4.83460478, -16.62737509, 20.6998037, -11.04366207, 2.73090033]
+        # exposed area related drag
+        Ps_ov_Pinf = Conical_Shock.get_invisc_press_recov(theta, M1)
+        C_ps       = 2/(gamma*M_inf**2) * (Ps_ov_Pinf-1)
         
-        # Get the coefficients for the specified mach number
-        c1 = np.polyval(c1_list, M_inf)
-        c2 = np.polyval(c2_list, M_inf)
-        c3 = np.polyval(c3_list, M_inf)
+        CD_add = (P_inf/q_inf) * (A1/AC) * np.cos(theta/180*np.pi)((P1/P_inf)*(1+gamma*M1**2)-1) - 2*(A_inf/AC) + C_ps+(AS/AC)
         
-        # Use coefficients on theta_c to get the pressure recovery
-        fit   = [c1, c2, c3]
-
-        K_add = np.polyval(fit, A_inf/AC)
-
-        CD_add = (P_inf/q_inf) * (A1/AC) * ((P1/P_inf)*(1+gamma*M1**2)-1) - 2*(A_inf/AC)
+        if M_inf < 1.4:
+            if M_inf >= 0.7 and M_inf <= 0.9:
+                	c1_fit = [-10.55390326, 15.71708277, -5.23617066]
+                	c2_fit = [16.36281692, -24.54266271, 7.4994281]
+                	c3_fit = [-4.86319239, 7.59775242, -1.85372994]
+            elif M_inf > 0.9 and M_inf <= 1.1:
+                	c1_fit = [2.64544806e-17, 3.60542191e-01]
+                	c2_fit = [1.57079398e-16, -1.33508664e+00]
+                	c3_fit = [-7.8265315e-16, 1.0450614e+00]
+            else:
+                c1_fit = [-102.15032982, 403.09453072, -527.81008066, 229.16933773]
+                c2_fit = [134.93205478, -539.18500576, 716.8828252, -317.08690229]
+                c3_fit = [-29.74762681, 122.74408883, -166.89910445, 75.70782011]
+                
+            c1 = np.polyval(c1_fit, M_inf)
+            c2 = np.polyval(c2_fit, M_inf)
+            c3 = np.polyval(c3_fit, M_inf)
+                
+            # Use coefficients on theta_c to get the pressure recovery
+            fit   = [c1, c2, c3]
+            K_add = np.polyval(fit, A_inf/AC)
+        
+        else:
+            K_add = 1
+        
         D_add  = CD_add * q_inf* AC * K_add
         
         return D_add
-        
-    __call__ = compute
+    
+
+    

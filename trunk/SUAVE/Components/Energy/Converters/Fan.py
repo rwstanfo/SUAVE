@@ -110,17 +110,16 @@ class Fan(Energy_Component):
         
         #method to compute the fan properties
         
-        #Compute the output stagnation quantities 
+        #Compute the output stagnation quantities based on the pressure ratio of the component
         ht_in     = Cp*Tt_in
-        
         Pt_out    = Pt_in*pid
         Tt_out    = Tt_in*pid**((gamma-1)/(gamma*etapold))
-        ht_out    = Cp*Tt_out    
+        ht_out    = Cp*Tt_out
         
-        #computing the wok done by the fan (for matching with turbine)
+        #compute the work done by the compressor(for matching with the turbine)
         work_done = ht_out- ht_in
         
-        #pack the computed quantities into outputs
+        #pack computed quantities into the outputs
         self.outputs.stagnation_temperature  = Tt_out
         self.outputs.stagnation_pressure     = Pt_out
         self.outputs.stagnation_enthalpy     = ht_out

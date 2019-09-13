@@ -160,6 +160,7 @@ class Thrust(Energy_Component):
         bypass_ratio                = self.inputs.bypass_ratio  
         flow_through_core           = self.inputs.flow_through_core #scaled constant to turn on core thrust computation
         flow_through_fan            = self.inputs.flow_through_fan #scaled constant to turn on fan thrust computation
+        #inlet_nozzle                = self.inputs.inlet_nozzle
 
         #unpacking from self
         Tref                 = self.reference_temperature
@@ -198,6 +199,11 @@ class Thrust(Energy_Component):
 
         #computing the power 
         power            = FD2*u0
+        
+        #compute drag
+        #drag = inlet_nozzle.compute_drag(conditions)
+        
+        #FD2 = FD2 - drag
 
         #pack outputs
 
@@ -280,6 +286,7 @@ class Thrust(Energy_Component):
         total_temperature_reference = self.inputs.total_temperature_reference 
         total_pressure_reference    = self.inputs.total_pressure_reference 
         core_nozzle                 = self.inputs.core_nozzle 
+        inlet_nozzle                = self.inputs.inlet_nozzle
         core_exit_temperature       = core_nozzle.temperature 
         core_exit_velocity          = core_nozzle.velocity 
         core_area_ratio             = core_nozzle.area_ratio 
@@ -311,6 +318,10 @@ class Thrust(Energy_Component):
         a = np.array([0.])         
         fuel_flow_rate   = np.fmax(FD2*TSFC/g,a)  
 
+        drag = inlet_nozzle.compute_drag(conditions)
+        
+        FD2 = FD2 - drag
+        print(drag)
         #computing the power  
         power            = FD2*u0 
 

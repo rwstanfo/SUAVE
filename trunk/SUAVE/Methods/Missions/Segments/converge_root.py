@@ -46,6 +46,7 @@ def converge_root(segment):
         root_finder = segment.settings.root_finder
     except AttributeError:
         root_finder = scipy.optimize.fsolve 
+        
     
     unknowns,infodict,ier,msg = root_finder( iterate,
                                          unknowns,
@@ -96,5 +97,6 @@ def iterate(unknowns, segment):
     segment.process.iterate(segment)
     
     residuals = segment.state.residuals.pack_array()
+    
         
     return residuals 

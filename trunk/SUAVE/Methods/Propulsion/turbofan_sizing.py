@@ -189,7 +189,8 @@ def turbofan_sizing(turbofan,mach_number = None, altitude = None, delta_isa = 0,
     thrust.inputs.number_of_engines                        = number_of_engines
     thrust.inputs.bypass_ratio                             = bypass_ratio
     thrust.inputs.flow_through_core                        =  1./(1.+bypass_ratio) #scaled constant to turn on core thrust computation
-    thrust.inputs.flow_through_fan                         =  bypass_ratio/(1.+bypass_ratio) #scaled constant to turn on fan thrust computation     
+    thrust.inputs.flow_through_fan                         =  bypass_ratio/(1.+bypass_ratio) #scaled constant to turn on fan thrust computation 
+    thrust.inputs.inlet_nozzle                             = inlet_nozzle    
 
     #compute the thrust
     thrust.size(conditions)

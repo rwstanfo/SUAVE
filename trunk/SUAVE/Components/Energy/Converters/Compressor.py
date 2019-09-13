@@ -102,7 +102,6 @@ class Compressor(Energy_Component):
         #unpack from inputs
         Tt_in    = self.inputs.stagnation_temperature
         Pt_in    = self.inputs.stagnation_pressure
-        
         #unpack from self
         pid      = self.pressure_ratio
         etapold  = self.polytropic_efficiency

@@ -87,6 +87,7 @@ class Aerodynamics(Basic):
         self.freestream.gravity            = ones_1col * 0
         self.freestream.reynolds_number    = ones_1col * 0
         self.freestream.dynamic_pressure   = ones_1col * 0
+        self.freestream.area_initial_streamtube = ones_1col * 24.
 
         # aerodynamics conditions
         self.aerodynamics = Conditions()        

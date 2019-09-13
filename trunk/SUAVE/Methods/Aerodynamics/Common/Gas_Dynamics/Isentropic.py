@@ -1,5 +1,5 @@
 ## @ingroup Methods-Aerodynamics-Common-Gas_Dynamics
-# isentropic.py
+# Isentropic.py
 #
 # Created:  May 2019, M. Dethy
 # Modified:  
@@ -52,7 +52,7 @@ def isentropic_relations(M,gamma):
 
     return T_o_Tt, P_o_Pt, rho_o_rhot, A_o_Astar, f_m
 
-def get_m(f_m_array, gamma, subsonic_flag):
+def get_m(f_m_array, gamma_array, subsonic_flag):
     """The mach number from a given area-mach relation value
 
     Assumptions:
@@ -76,23 +76,17 @@ def get_m(f_m_array, gamma, subsonic_flag):
     N/A
     """
     M_list = []
-    for f_m in f_m_array:
-        # Symbolically solve for mach number
-        M = Symbol("M",real=True)
-        A_o_Astar    = 1/M * ((gamma+1)/2)**(-(gamma+1)/(2*(gamma-1))) * (1 + (gamma - 1)/2 * M**2) ** ((gamma+1)/(2*(gamma-1)))
-        M = np.array(solve(A_o_Astar**(-1) - f_m, M))
-        if subsonic_flag == 1:
-            M_list.append(float(M[M <= 1]))
-        else:
-            M_list.append(float(M[M >= 1]))
-    return np.array(M_list)
-
-if __name__ == "__main__":
-    gnew = get_m(0.25, 1.4, 1)
-    T_o_Tt, P_o_Pt, rho_o_rhot, A_o_Astar, f_m = isentropic_relations(0.8, 1.4)
-    
-
-
-
-
-
+    if np.shape(f_m_array) != (0,):
+        for i, f_m in enumerate(f_m_array):
+            gamma = round(gamma_array[i], 2)
+            f_m = round(f_m, 2)
+            # Symbolically solve for mach number
+            M = Symbol("M",real=True)
+            A_o_Astar    = 1/M * ((gamma+1)/2)**(-(gamma+1)/(2*(gamma-1))) * (1 + (gamma - 1)/2 * M**2) ** ((gamma+1)/(2*(gamma-1)))
+            M = np.array(solve(A_o_Astar - 1/f_m, M))
+            if subsonic_flag == 1:
+                M_list.append(np.asscalar(M[M < 1]))
+            else:
+                M_list.append(np.asscalar(M[M >= 1]))
+        return M_list
+    return

@@ -113,7 +113,6 @@ class Turbine(Energy_Component):
         f               = self.inputs.fuel_to_air_ratio
         compressor_work = self.inputs.compressor.work_done
         fan_work        = self.inputs.fan.work_done
-
         if self.inputs.shaft_power_off_take is not None:
             shaft_takeoff = self.inputs.shaft_power_off_take.work_done
         else:

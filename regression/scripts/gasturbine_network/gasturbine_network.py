@@ -24,7 +24,8 @@ Data, Container,
 )
 
 from SUAVE.Components import Component, Physical_Component, Lofted_Body
-from SUAVE.Components.Energy.Networks.Turbofan import Turbofan
+from SUAVE.Components.Energy.Networks.Turbofan_Super import Turbofan_Super
+from SUAVE.Components.Energy.Converters import Two_Dimensional_Inlet
 from SUAVE.Methods.Propulsion.turbofan_sizing import turbofan_sizing
 
 # ----------------------------------------------------------------------
@@ -55,6 +56,7 @@ def energy_network():
     conditions = SUAVE.Analyses.Mission.Segments.Conditions.Aerodynamics()
   
     # freestream conditions
+    conditions.freestream.area_initial_streamtube      = ones_1col*28.0  
     conditions.freestream.altitude                     = ones_1col*alt   
     conditions.freestream.mach_number                  = ones_1col*0.8
     conditions.freestream.pressure                     = ones_1col*atmo_data.pressure
@@ -89,6 +91,7 @@ def energy_network():
     conditions_sizing = SUAVE.Analyses.Mission.Segments.Conditions.Aerodynamics()
 
     # freestream conditions
+    conditions_sizing.freestream.area_initial_streamtube      = ones_1col*28.0
     conditions_sizing.freestream.altitude                     = ones_1col*alt_size     
     conditions_sizing.freestream.mach_number                  = ones_1col*0.8
     conditions_sizing.freestream.pressure                     = ones_1col*atmo_data.pressure
@@ -120,7 +123,7 @@ def energy_network():
     # ------------------------------------------------------------------    
     
     # Instantiate the gas turbine network
-    turbofan     = SUAVE.Components.Energy.Networks.Turbofan()
+    turbofan     = SUAVE.Components.Energy.Networks.Turbofan_Super()
     turbofan.tag = 'turbofan'
     
     # setup
@@ -147,12 +150,16 @@ def energy_network():
     #  Component 2 - Inlet Nozzle
     
     # instantiate
-    inlet_nozzle = SUAVE.Components.Energy.Converters.Compression_Nozzle()
+    inlet_nozzle = SUAVE.Components.Energy.Converters.Two_Dimensional_Inlet()
     inlet_nozzle.tag = 'inlet_nozzle'
     
     # setup
     inlet_nozzle.polytropic_efficiency = 0.98
     inlet_nozzle.pressure_ratio        = 0.98
+    inlet_nozzle.areas.capture         = 24.5
+    inlet_nozzle.areas.throat          = 20.0
+    inlet_nozzle.areas.inlet_entrance  = 22.0
+    inlet_nozzle.angles.ramp_angle     = 15.0
     
     # add to network
     turbofan.append(inlet_nozzle)
@@ -291,6 +298,7 @@ def energy_network():
     
     #size the turbofan
     turbofan_sizing(turbofan,0.8,10000.0)
+    turbofan.inlet_nozzle.compute_drag(state_sizing.conditions)
     
     print("Design thrust ",turbofan.design_thrust)
     print("Sealevel static thrust ",turbofan.sealevel_static_thrust)
@@ -315,7 +323,6 @@ def energy_network():
     error              =  Data()
     error.thrust_error = (F[0][0] -  expected.thrust)/expected.thrust
     error.mdot_error   = (mdot[0][0]-expected.mdot)/expected.mdot
-    print(error)
     
     for k,v in list(error.items()):
         assert(np.abs(v)<1e-6)    
