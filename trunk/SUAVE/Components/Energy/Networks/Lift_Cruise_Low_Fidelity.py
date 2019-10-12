@@ -37,8 +37,8 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
     def __defaults__(self):
         self.motor_lift                = None
         self.motor_forward             = None
-        self.propeller_lift            = None
-        self.propeller_forward         = None
+        self.rotor            = None
+        self.propeller         = None
         self.esc_lift                  = None
         self.esc_forward               = None
         self.avionics                  = None
@@ -64,8 +64,8 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         numerics          = state.numerics
         motor_lift        = self.motor_lift 
         motor_forward     = self.motor_forward
-        propeller_lift    = self.propeller_lift 
-        propeller_forward = self.propeller_forward
+        rotor    = self.rotor 
+        propeller = self.propeller
         esc_lift          = self.esc_lift
         esc_forward       = self.esc_forward        
         avionics          = self.avionics
@@ -100,8 +100,8 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         
         motor_forward.power_lo(conditions)
         #link
-        propeller_forward.inputs.power = motor_forward.outputs.power
-        F_forward,P_forward = propeller_forward.spin_lo(conditions)
+        propeller.inputs.power = motor_forward.outputs.power
+        F_forward,P_forward = propeller.spin_lo(conditions)
             
         # Check to see if magic thrust is needed, the ESC caps throttle at 1.1 already
         eta = conditions.propulsion.throttle[:,0,None]
@@ -128,7 +128,7 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         konditions.frames          = Data()
         konditions.frames.inertial = Data()
         konditions.frames.body     = Data()
-        konditions.propulsion.throttle                    = conditions.propulsion.throttle_lift* 1.
+        konditions.propulsion.throttle                    = conditions.propulsion.rotor_throttle* 1.
         konditions.freestream.density                     = conditions.freestream.density * 1.
         konditions.freestream.velocity                    = conditions.freestream.velocity * 1.
         konditions.freestream.dynamic_viscosity           = conditions.freestream.dynamic_viscosity * 1.
@@ -145,11 +145,11 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         
         motor_lift.power_lo(conditions)
         #link
-        propeller_lift.inputs.power = motor_lift.outputs.power
-        F_lift,P_lift = propeller_lift.spin_lo(conditions)
+        rotor.inputs.power = motor_lift.outputs.power
+        F_lift,P_lift = rotor.spin_lo(conditions)
             
         # Check to see if magic thrust is needed, the ESC caps throttle at 1.1 already
-        eta = state.conditions.propulsion.throttle_lift
+        eta = state.conditions.propulsion.rotor_throttle
         P_lift[eta>1.0] = P_lift[eta>1.0]*eta[eta>1.0]
         F_lift[eta>1.0] = F_lift[eta>1.0]*eta[eta>1.0]        
         
@@ -222,7 +222,7 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
     def unpack_unknowns_transition(self,segment):
         
         # Here we are going to unpack the unknowns (Cps,throttle,voltage) provided for this network
-        segment.state.conditions.propulsion.throttle_lift                   = segment.state.unknowns.throttle_lift
+        segment.state.conditions.propulsion.rotor_throttle                   = segment.state.unknowns.rotor_throttle
         segment.state.conditions.propulsion.throttle                         = segment.state.unknowns.throttle
         
         return
@@ -233,7 +233,7 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         ones = segment.state.ones_row
         
         # Here we are going to unpack the unknowns (Cps,throttle,voltage) provided for this network
-        segment.state.conditions.propulsion.throttle_lift                   = 0.0 * ones(1)
+        segment.state.conditions.propulsion.rotor_throttle                   = 0.0 * ones(1)
         segment.state.conditions.propulsion.throttle                         = segment.state.unknowns.throttle
         
         return    
@@ -243,7 +243,7 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         ones = segment.state.ones_row
         
         # Here we are going to unpack the unknowns (Cps,throttlevoltage) provided for this network
-        segment.state.conditions.propulsion.throttle_lift            = segment.state.unknowns.throttle
+        segment.state.conditions.propulsion.rotor_throttle            = segment.state.unknowns.throttle
         segment.state.conditions.propulsion.throttle                         = 0.0 * ones(1)
         
         return    
@@ -253,9 +253,9 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         
         # Here we are going to pack the residuals (torque,voltage) from the network
         #q_motor_forward = segment.state.conditions.propulsion.motor_torque_forward
-        #q_prop_forward  = segment.state.conditions.propulsion.propeller_torque_forward
+        #q_prop_forward  = segment.state.conditions.propulsion.propeller_torque
         #q_motor_lift    = segment.state.conditions.propulsion.motor_torque_lift
-        #q_prop_lift     = segment.state.conditions.propulsion.propeller_torque_lift        
+        #q_prop_lift     = segment.state.conditions.propulsion.rotor_torque_lift        
         
         #v_actual        = state.conditions.propulsion.voltage_under_load
         #v_predict       = state.unknowns.battery_voltage_under_load
@@ -273,7 +273,7 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         
         # Here we are going to pack the residuals (torque,voltage) from the network
         #q_motor_forward = state.conditions.propulsion.motor_torque_forward
-        #q_prop_forward  = state.conditions.propulsion.propeller_torque_forward   
+        #q_prop_forward  = state.conditions.propulsion.propeller_torque   
         
         #v_actual        = state.conditions.propulsion.voltage_under_load
         #v_predict       = state.unknowns.battery_voltage_under_load
@@ -289,7 +289,7 @@ class Lift_Cruise_Low_Fidelity(Propulsor):
         
         # Here we are going to pack the residuals (torque,voltage) from the network
         #q_motor_lift    = state.conditions.propulsion.motor_torque_lift
-        #q_prop_lift     = state.conditions.propulsion.propeller_torque_lift        
+        #q_prop_lift     = state.conditions.propulsion.rotor_torque_lift        
         
         #v_actual        = state.conditions.propulsion.voltage_under_load
         #v_predict       = state.unknowns.battery_voltage_under_load

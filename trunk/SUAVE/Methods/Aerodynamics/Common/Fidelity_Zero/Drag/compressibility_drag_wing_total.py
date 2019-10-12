@@ -18,21 +18,16 @@ import numpy as np
 ## @ingroup Methods-Aerodynamics-Common-Fidelity_Zero-Drag
 def compressibility_drag_wing_total(state,settings,geometry):
     """Sums compressibility drag for all wings combined
-
     Assumptions:
     None
-
     Source:
     adg.stanford.edu (Stanford AA241 A/B Course Notes)
-
     Inputs:
     state.conditions.aerodynamics.drag_breakdown.compressible[wing.tag].compressibility_drag  [Unitless]
     geometry.wings.areas.reference                                                            [m^2]
     geometry.reference_area                                                                   [m^2]
-
     Outputs:
     total_compressibility_drag                                                                [Unitless]
-
     Properties Used:
     N/A
     """ 
@@ -49,8 +44,7 @@ def compressibility_drag_wing_total(state,settings,geometry):
     
     # from wings
     for wing in wings.values():
-        # scaled by reference area
-        compressibility_drag = conditions.aerodynamics.drag_breakdown.compressible[wing.tag].compressibility_drag * wing.areas.reference / vehicle_reference_area
+        compressibility_drag = conditions.aerodynamics.drag_breakdown.compressible[wing.tag].compressibility_drag
         conditions.aerodynamics.drag_breakdown.compressible[wing.tag].compressibility_drag = compressibility_drag * 1. # avoid linking variables
         total_compressibility_drag += compressibility_drag 
 

@@ -56,6 +56,6 @@ def wing_compressibility_correction(state,settings,geometry):
     wings_lift_comp = wings_lift * compress_corr
     
     state.conditions.aerodynamics.lift_breakdown.compressible_wings = wings_lift_comp
-    state.conditions.aerodynamics.lift_coefficient= wings_lift_comp
+    state.conditions.aerodynamics.lift_coefficient                  = wings_lift_comp
 
     return wings_lift_comp

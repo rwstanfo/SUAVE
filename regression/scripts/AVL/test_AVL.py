@@ -51,8 +51,8 @@ def main():
 
     # append AVL aerodynamic analysis
     aerodynamics                                                          = SUAVE.Analyses.Aerodynamics.AVL()
-    aerodynamics.process.compute.lift.inviscid.regression_flag            = True  # Make False first to run and get results. 
-    aerodynamics.process.compute.lift.inviscid.save_regression_results    = False # Make True first to run and get results.  
+    aerodynamics.process.compute.lift.inviscid.regression_flag            = False # Make False first to run and get results. 
+    aerodynamics.process.compute.lift.inviscid.save_regression_results    = True  # Make True first to run and get results.  
     aerodynamics.process.compute.lift.inviscid.settings.spanwise_vortices = 30
     aerodynamics.process.compute.lift.inviscid.keep_files                 = True
     aerodynamics.geometry                                                 = copy.deepcopy(configs.cruise) 
@@ -61,8 +61,8 @@ def main():
                                                                        
     # append AVL stability analysis                                    
     stability                                                             = SUAVE.Analyses.Stability.AVL()
-    stability.regression_flag                                             = True  # Make False to run and get results. 
-    stability.save_regression_results                                     = False # Make True first to run and get results. 
+    stability.regression_flag                                             = False # Make False to run and get results. 
+    stability.save_regression_results                                     = True  # Make True first to run and get results. 
     stability.settings.spanwise_vortices                                  = 30
     stability.keep_files                                                  = True
     stability.geometry                                                    = copy.deepcopy(configs.cruise)
@@ -72,7 +72,6 @@ def main():
     # ------------------------------------------------------------------
     #   Initialize the Mission
     # ------------------------------------------------------------------
-
     mission = SUAVE.Analyses.Mission.Sequential_Segments()
     mission.tag = 'the_mission'
 
@@ -85,40 +84,34 @@ def main():
 
     # unpack Segments module
     Segments = SUAVE.Analyses.Mission.Segments
-
+    
     # base segment
     base_segment = Segments.Segment()
 
-
-    # ------------------------------------------------------------------    
-    #   Cruise Segment: constant speed, constant altitude
-    # ------------------------------------------------------------------    
-
+    # Cruise Segment: constant speed, constant altitude
     segment = Segments.Cruise.Constant_Speed_Constant_Altitude(base_segment)
-    segment.tag = "cruise"
-
-    segment.analyses.extend( configs_analyses.cruise )
-
+    segment.tag = "cruise" 
+    segment.analyses.extend( configs_analyses.cruise ) 
     segment.air_speed = 230. * Units['m/s']
     segment.distance  = 4000. * Units.km
-    segment.altitude  = 10.668 * Units.km
+    segment.altitude  = 10.668 * Units.km 
+    segment.state.numerics.number_control_points = 4 
     
-    segment.state.numerics.number_control_points = 4
-
     # add to mission
     mission.append_segment(segment)
-
-
-    missions_analyses = missions_setup(mission)
-
-    analyses = SUAVE.Analyses.Analysis.Container()
+    
+    # ------------------------------------------------------------------
+    #   Initialize the Mission
+    # ------------------------------------------------------------------   
+    missions_analyses = missions_setup(mission) 
+    analyses          = SUAVE.Analyses.Analysis.Container()
     analyses.configs  = configs_analyses
-    analyses.missions = missions_analyses
+    analyses.missions = missions_analyses 
     
     simple_sizing(configs, analyses)
-
-    configs.finalize()
+    
     analyses.finalize()
+    configs.finalize()
  
     # mission analysis
     mission = analyses.missions.base    
@@ -126,7 +119,7 @@ def main():
 
     # lift coefficient check
     lift_coefficient              = results.segments.cruise.conditions.aerodynamics.lift_coefficient[0][0]
-    lift_coefficient_true         = 0.6118596728192642
+    lift_coefficient_true         = 0.14587349
 
     print(lift_coefficient)
     diff_CL                       = np.abs(lift_coefficient  - lift_coefficient_true) 
@@ -136,7 +129,7 @@ def main():
     
     # moment coefficient check
     moment_coefficient            = results.segments.cruise.conditions.stability.static.CM[0][0]
-    moment_coefficient_true       = -0.6266715413657948
+    moment_coefficient_true       = -0.14978497
     
     print(moment_coefficient)
     diff_CM                       = np.abs(moment_coefficient - moment_coefficient_true)

@@ -5,4 +5,3 @@
 """ SUAVE XFOIL Interface Package Setup
 """
 from .compute_airfoil_polars         import compute_airfoil_polars
-

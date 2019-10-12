@@ -51,7 +51,7 @@ def unpack_unknowns(segment):
     throttle       = segment.state.unknowns.throttle                        
     throttle_lift  = segment.state.unknowns.throttle_lift                   
     Cp_prop        = segment.state.unknowns.propeller_power_coefficient     
-    Cp_prop_lift   = segment.state.unknowns.propeller_power_coefficient_lift
+    Cp_prop_lift   = segment.state.unknowns.rotor_power_coefficient
     Voltage        = segment.state.unknowns.battery_voltage_under_load
     alt            = segment.altitude   
     
@@ -59,7 +59,7 @@ def unpack_unknowns(segment):
     conditions.propulsion.throttle                         = throttle[:,0]     
     conditions.propulsion.throttle_lift                    = throttle_lift[:,0]
     conditions.propulsion.propeller_power_coefficient      = Cp_prop[:,0]      
-    conditions.propulsion.propeller_power_coefficient_lift = Cp_prop_lift[:,0]   
+    conditions.propulsion.rotor_power_coefficient = Cp_prop_lift[:,0]   
     conditions.propulsion.battery_voltage_under_load       = Voltage[:,0] 
     
     conditions.frames.inertial.position_vector[:,2]        = -alt # z points down
@@ -246,5 +246,5 @@ def solve_constant_speed_constant_altitude_loiter(segment):
     segment.state.unknowns.throttle                         = CACPCA_res.state.unknowns.throttle   
     segment.state.unknowns.throttle_lift                    = CACPCA_res.state.unknowns.throttle_lift
     segment.state.unknowns.propeller_power_coefficient      = CACPCA_res.state.unknowns.propeller_power_coefficient       
-    segment.state.unknowns.propeller_power_coefficient_lift = CACPCA_res.state.unknowns.propeller_power_coefficient_lift
+    segment.state.unknowns.rotor_power_coefficient = CACPCA_res.state.unknowns.rotor_power_coefficient
 

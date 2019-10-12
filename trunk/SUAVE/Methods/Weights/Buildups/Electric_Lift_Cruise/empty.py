@@ -69,15 +69,15 @@ def empty(config,
 #-------------------------------------------------------------------------------
 # Unpack Inputs
 #-------------------------------------------------------------------------------
-    rPropLift           = config.propulsors.propulsor.propeller_lift.tip_radius
-    rPropThrust         = config.propulsors.propulsor.propeller_forward.tip_radius
+    rPropLift           = config.propulsors.propulsor.rotor.tip_radius
+    rPropThrust         = config.propulsors.propulsor.propeller.tip_radius
     mBattery            = config.propulsors.propulsor.battery.mass_properties.mass
     mPayload            = config.propulsors.propulsor.payload.mass_properties.mass
     MTOW                = config.mass_properties.max_takeoff
     nLiftProps          = config.propulsors.propulsor.number_of_engines_lift
     nThrustProps        = config.propulsors.propulsor.number_of_engines_forward
-    nLiftBlades         = config.propulsors.propulsor.propeller_lift.number_blades
-    nThrustBlades       = config.propulsors.propulsor.propeller_forward.number_blades
+    nLiftBlades         = config.propulsors.propulsor.rotor.number_blades
+    nThrustBlades       = config.propulsors.propulsor.propeller.number_blades
     fLength             = config.fuselages.fuselage.lengths.total
     fWidth              = config.fuselages.fuselage.width
     fHeight             = config.fuselages.fuselage.heights.maximum
@@ -124,9 +124,9 @@ def empty(config,
 
     # Component Weight Calculations
 
-    output.lift_rotors      = (prop(config.propulsors.propulsor.propeller_lift, maxLift) 
+    output.lift_rotors      = (prop(config.propulsors.propulsor.rotor, maxLift) 
                                * (len(config.wings['main_wing'].motor_spanwise_locations))) *Units.kg
-    output.thrust_rotors    = prop(config.propulsors.propulsor.propeller_forward, maxLift/5) *Units.kg
+    output.thrust_rotors    = prop(config.propulsors.propulsor.propeller, maxLift/5) *Units.kg
     output.fuselage         = fuselage(config) *Units.kg
     output.wiring           = wiring(config,
                                      np.ones(8)**0.25,
