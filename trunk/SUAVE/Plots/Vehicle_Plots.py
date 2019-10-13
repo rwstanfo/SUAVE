@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+from SUAVE.Methods.Aerodynamics.XFOIL.compute_airfoil_polars import read_airfoil_geometry
 
 ## @ingroup Plots
 # ------------------------------------------------------------------
@@ -49,9 +50,9 @@ def plot_vehicle_vlm_panelization(data, save_figure = False, save_filename = "VL
     return
 
 # ------------------------------------------------------------------
-#   Propeller Geoemtry 
+#   3D Propeller Geoemtry 
 # ------------------------------------------------------------------
-def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_filename = "Propeller_Geometry"):   
+def plot_propeller_geometry_3D(prop, line_color = 'bo-', save_figure = False, save_filename = "Propeller_Geometry_3D"):   
     # unpack
     Rt     = prop.tip_radius          
     Rh     = prop.hub_radius          
@@ -89,7 +90,7 @@ def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_
                 raise AssertionError("Number of sections not equal to number of stations") 
                       
             # get airfoil coordinate geometry     
-            airfoil_data = read_propeller_airfoils(a_sec)       
+            airfoil_data = read_airfoil_geometry(a_sec)       
             
             #plot airfoils 
             for j in range(dim):
@@ -117,6 +118,49 @@ def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_
                 
     if save_figure:
         plt.savefig(save_filename + ".png")  
+    
+
+# ------------------------------------------------------------------
+#   3D Propeller Geoemtry 
+# ------------------------------------------------------------------
+def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_filename = "Propeller_Geometry"):   
+    # unpack
+    Rt     = prop.tip_radius          
+    Rh     = prop.hub_radius          
+    num_B  = prop.number_blades       
+    a_sec  = prop.airfoil_sections           
+    a_secl = prop.airfoil_section_location   
+    beta   = prop.twist_distribution         
+    b      = prop.chord_distribution         
+    r      = prop.radius_distribution        
+    t      = prop.max_thickness_distribution
+    
+    fig = plt.figure(save_filename) 
+    fig.set_size_inches(6, 8)     
+    axes = fig.add_subplot(3,1,1)
+    axes.plot(r*Rt, b, line_color)
+    axes.set_ylabel('Chord')
+    axes.get_yaxis().get_major_formatter().set_scientific(False)
+    axes.get_yaxis().get_major_formatter().set_useOffset(False)        
+    axes.grid(True)
+    
+    axes = fig.add_subplot(3,1,2)
+    axes.plot(r*Rt, beta, line_color)
+    axes.set_ylabel('Twist')
+    axes.get_yaxis().get_major_formatter().set_scientific(False)
+    axes.get_yaxis().get_major_formatter().set_useOffset(False)        
+    axes.grid(True)
+    
+    axes = fig.add_subplot(3,1,3)
+    axes.plot(r*Rt, t, line_color)
+    axes.set_ylabel('Thickness')
+    axes.get_yaxis().get_major_formatter().set_scientific(False)
+    axes.get_yaxis().get_major_formatter().set_useOffset(False)        
+    axes.grid(True)    
+        
+    if save_figure:
+        plt.savefig(save_filename + ".png")   
+    
                     
     return
 

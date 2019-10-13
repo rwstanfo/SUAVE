@@ -212,7 +212,7 @@ def propeller_design(prop,N=20):
     prop.chord_distribution         = c
     prop.Cp                         = Cp
     prop.mid_chord_aligment         = MCA
-     
+    prop.radius_distribution        = chi
     # compute airfoil sections if given
     if  a_sec != None and a_secl != None:
         airfoil_geometry = Data()

@@ -17,4 +17,5 @@ from .Mission_Plots import plot_solar_flux
 from .Mission_Plots import plot_lift_cruise_network 
 
 from .Vehicle_Plots import plot_vehicle_vlm_panelization
+from .Vehicle_Plots import plot_propeller_geometry_3D
 from .Vehicle_Plots import plot_propeller_geometry
