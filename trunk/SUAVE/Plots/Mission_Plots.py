@@ -644,7 +644,7 @@ def plot_lift_cruise_network(results, line_color = 'bo-', save_figure = False, s
         axes.get_yaxis().get_major_formatter().set_scientific(False)
         axes.get_yaxis().get_major_formatter().set_useOffset(False)
         axes.grid(True)       
-        plt.ylim((0,2))
+        plt.ylim((0,1))
         if i == 0:
             axes.legend(loc='upper center')         
     
@@ -718,15 +718,15 @@ def plot_lift_cruise_network(results, line_color = 'bo-', save_figure = False, s
     
         axes = fig.add_subplot(2,3,4)
         axes.plot(time, effp, 'bo-',label= r'$\eta_{rotor}$' )
-        axes.plot(time, FM, 'go-' ,label='Figure of Merit')
+        #axes.plot(time, FM, 'go-' ,label='Figure of Merit')
         axes.set_xlabel('Time (mins)')
         axes.set_ylabel(r'Propeller Efficiency $\eta_{rotor}$')
         axes.get_yaxis().get_major_formatter().set_scientific(False)
         axes.get_yaxis().get_major_formatter().set_useOffset(False)  
-        if i == 0:
-            axes.legend(loc='upper center')   
+        #if i == 0:
+            #axes.legend(loc='upper center')   
         axes.grid(True)           
-        #plt.ylim((0,1))
+        plt.ylim((0,1))
     
         axes = fig.add_subplot(2,3,5)
         axes.plot(time, effm, 'bo-' )
@@ -734,7 +734,7 @@ def plot_lift_cruise_network(results, line_color = 'bo-', save_figure = False, s
         axes.set_ylabel(r'Motor Efficiency $\eta_{mot}$')
         axes.get_yaxis().get_major_formatter().set_scientific(False)
         axes.get_yaxis().get_major_formatter().set_useOffset(False)     
-        #plt.ylim((0,1))
+        plt.ylim((0,1))
         axes.grid(True)  
     
         axes = fig.add_subplot(2,3,6)
@@ -742,7 +742,7 @@ def plot_lift_cruise_network(results, line_color = 'bo-', save_figure = False, s
         axes.set_xlabel('Time (mins)')
         axes.set_ylabel('Power Coefficient')
         axes.get_yaxis().get_major_formatter().set_scientific(False)
-        axes.get_yaxis().get_major_formatter().set_useOffset(False)     
+        axes.get_yaxis().get_major_formatter().set_useOffset(False)   
         axes.grid(True)           
     
     if save_figure:
@@ -791,7 +791,7 @@ def plot_lift_cruise_network(results, line_color = 'bo-', save_figure = False, s
         axes.get_yaxis().get_major_formatter().set_scientific(False)
         axes.get_yaxis().get_major_formatter().set_useOffset(False)     
         axes.grid(True)           
-        #plt.ylim((0,1))
+        plt.ylim((0,1))
     
         axes = fig.add_subplot(2,3,5)
         axes.plot(time, effm, 'bo-' )
@@ -800,14 +800,14 @@ def plot_lift_cruise_network(results, line_color = 'bo-', save_figure = False, s
         axes.get_yaxis().get_major_formatter().set_scientific(False)
         axes.get_yaxis().get_major_formatter().set_useOffset(False)     
         axes.grid(True)         
-        #plt.ylim((0,1))
+        plt.ylim((0,1))
     
         axes = fig.add_subplot(2,3,6)
         axes.plot(time, Cp, 'bo-' )
         axes.set_xlabel('Time (mins)')
         axes.set_ylabel('Power Coefficient')
         axes.get_yaxis().get_major_formatter().set_scientific(False)
-        axes.get_yaxis().get_major_formatter().set_useOffset(False)     
+        axes.get_yaxis().get_major_formatter().set_useOffset(False) 
         axes.grid(True) 
         
     if save_figure:

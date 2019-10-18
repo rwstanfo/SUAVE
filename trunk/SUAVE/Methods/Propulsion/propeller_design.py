@@ -39,7 +39,7 @@ def propeller_design(prop,N=20):
           Based on Design of Optimum Propellers by Adkins and Liebeck
     """    
     # Unpack
-    B      = prop.number_blades
+    B      = prop.number_of_blades
     R      = prop.tip_radius
     Rh     = prop.hub_radius
     omega  = prop.angular_velocity    # Rotation Rate in rad/s

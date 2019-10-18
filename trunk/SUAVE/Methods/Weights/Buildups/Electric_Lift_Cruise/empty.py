@@ -76,8 +76,8 @@ def empty(config,
     MTOW                = config.mass_properties.max_takeoff
     nLiftProps          = config.propulsors.propulsor.number_of_engines_lift
     nThrustProps        = config.propulsors.propulsor.number_of_engines_forward
-    nLiftBlades         = config.propulsors.propulsor.rotor.number_blades
-    nThrustBlades       = config.propulsors.propulsor.propeller.number_blades
+    nLiftBlades         = config.propulsors.propulsor.rotor.number_of_blades
+    nThrustBlades       = config.propulsors.propulsor.propeller.number_of_blades
     fLength             = config.fuselages.fuselage.lengths.total
     fWidth              = config.fuselages.fuselage.width
     fHeight             = config.fuselages.fuselage.heights.maximum

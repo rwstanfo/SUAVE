@@ -304,7 +304,7 @@ class Lift_Cruise(Propulsor):
         conditions.propulsion.battery_efficiency                = (battery_draw+battery.resistive_losses)/battery_draw
         conditions.propulsion.payload_efficiency                = (battery_draw+(avionics.outputs.power + payload.outputs.power))/battery_draw            
         conditions.propulsion.propeller_power                   = P_forward*num_forward
-        conditions.propulsion.propeller_thrust_coefficient      = Cp_forward 
+        conditions.propulsion.propeller_thrust_coefficient      = noise_forward.Ct
         conditions.propulsion.propeller_tip_mach                = (rpm_forward*0.104719755 * R_forward)/a
         conditions.propulsion.propeller_torque                  = Q_forward       
         conditions.propulsion.propeller_efficiency              = etap_forward 

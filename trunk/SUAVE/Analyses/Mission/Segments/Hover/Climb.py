@@ -71,6 +71,15 @@ class Climb(Hover):
         iterate    = self.process.iterate
         
         initialize.conditions = Methods.Hover.Climb.initialize_conditions
+        
+        # --------------------------------------------------------------
+        #   Finalize - after iteration
+        # --------------------------------------------------------------
+        finalize = self.process.finalize
+        
+        # Post Processing
+        finalize.post_process = Process()         
+        finalize.post_process.acoustics   = SUAVE.Methods.Noise.Correlations.propeller_noise_low_fidelty       
     
         return
        

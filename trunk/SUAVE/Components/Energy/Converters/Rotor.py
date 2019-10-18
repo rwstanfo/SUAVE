@@ -53,7 +53,7 @@ class Rotor(Energy_Component):
         Properties Used:
         None
         """         
-        self.number_blades            = 0.0
+        self.number_of_blades            = 0.0
         self.tip_radius               = 0.0
         self.hub_radius               = 0.0
         self.twist_distribution       = 0.0
@@ -114,7 +114,7 @@ class Rotor(Energy_Component):
         Cp                           [-] (coefficient of power)
         Properties Used:
         self. 
-          number_blades              [-]
+          number_of_blades              [-]
           tip_radius                 [m]
           hub_radius                 [m]
           twist_distribution         [radians]
@@ -124,7 +124,7 @@ class Rotor(Energy_Component):
         """         
            
         #Unpack    
-        B      = self.number_blades
+        B      = self.number_of_blades
         R      = self.tip_radius
         Rh     = self.hub_radius
         beta   = self.twist_distribution
@@ -463,7 +463,7 @@ class Rotor(Energy_Component):
            """
            
         #Unpack    
-        B       = self.number_blades
+        B       = self.number_of_blades
         R       = self.tip_radius
         Rh      = self.hub_radius        
         beta_in = self.twist_distribution

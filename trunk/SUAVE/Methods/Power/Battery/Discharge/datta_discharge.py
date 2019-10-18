@@ -59,7 +59,7 @@ def datta_discharge(battery,numerics):
     
     #state of charge of the battery
     initial_discharge_state = np.dot(I,pbat) + battery.current_energy[0]
-    x = np.divide(initial_discharge_state,battery.max_energy)
+    x = 1 - np.divide(initial_discharge_state,battery.max_energy)
 
     # C rate
     C = np.abs(3600.*pbat/battery.max_energy)

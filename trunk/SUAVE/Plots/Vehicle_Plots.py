@@ -56,7 +56,7 @@ def plot_propeller_geometry_3D(prop, line_color = 'bo-', save_figure = False, sa
     # unpack
     Rt     = prop.tip_radius          
     Rh     = prop.hub_radius          
-    num_B  = prop.number_blades       
+    num_B  = prop.number_of_blades       
     a_sec  = prop.airfoil_sections           
     a_secl = prop.airfoil_section_location   
     beta   = prop.twist_distribution         
@@ -127,7 +127,7 @@ def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_
     # unpack
     Rt     = prop.tip_radius          
     Rh     = prop.hub_radius          
-    num_B  = prop.number_blades       
+    num_B  = prop.number_of_blades       
     a_sec  = prop.airfoil_sections           
     a_secl = prop.airfoil_section_location   
     beta   = prop.twist_distribution         
