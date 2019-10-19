@@ -48,7 +48,7 @@ class Propeller(Energy_Component):
         None
         """         
         self.number_of_blades            = 0
-        self.number_engines           = 0
+        self.number_of_engines           = 0
         self.tip_radius               = 0.0
         self.hub_radius               = 0.0
         self.twist_distribution       = 0.0
@@ -118,7 +118,7 @@ class Propeller(Energy_Component):
         """         
         #Unpack            
         B                 = self.number_of_blades
-        num_eng           = self.number_engines
+        num_eng           = self.number_of_engines
         R                 = self.tip_radius
         Rh                = self.hub_radius
         local_blade_pitch = self.twist_distribution
@@ -420,7 +420,7 @@ class Propeller(Energy_Component):
         results_conditions = Data     
         outputs   = results_conditions(
             number_of_blades             = B,
-            number_engines            = num_eng,
+            number_of_engines            = num_eng,
             R                         = R,
             D                         = D,
             number_sections           = N,

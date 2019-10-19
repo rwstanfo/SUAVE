@@ -9,9 +9,8 @@ import SUAVE
 from SUAVE.Core import Units , Data
 import numpy as np
 from scipy.special import jv 
-
-def propeller_noise_low_fidelity(noise_data,ctrl_pts):
-#def propeller_noise_low_fidelity(segment):
+ 
+def propeller_noise_low_fidelity(segment):
     '''    Source:
         1. Herniczek, M., Feszty, D., Meslioui, S., Park, JongApplicability of Early Acoustic Theory for Modern Propeller Design
         2. Schlegel, R., King, R., and Muli, H., Helicopter Rotor Noise Generation and Propagation, Technical Report, 
@@ -30,30 +29,26 @@ def propeller_noise_low_fidelity(noise_data,ctrl_pts):
            - Vortex noise is computed using the method outlined by Schlegel et. al 
     '''
     
-    #noise_data = segment.conditions.propulsion.acoustic_outputs
-    #ctrl_pts   = segment.state.numerics.number_control_points
-    #segment.conditions.freestream.velocity
-    #segment.conditions.frames.inertial.position_vector 
+    noise_data = segment.conditions.propulsion.acoustic_outputs
+    ctrl_pts   = segment.state.numerics.number_control_points
+    segment.conditions.freestream.velocity
+    segment.conditions.frames.inertial.position_vector 
  
-    SPL_GD_unweighted      = np.zeros((ctrl_pts,1))
     SPL_BM_unweighted      = np.zeros((ctrl_pts,1))
     SPL_H_unweighted       = np.zeros((ctrl_pts,1))
     SPL_v_unweighted       = np.zeros((ctrl_pts,1)) 
-    SPL_GDv_dBA            = np.zeros((ctrl_pts,1))
     SPL_BMv_dBA            = np.zeros((ctrl_pts,1))
     SPL_Hv_dBA             = np.zeros((ctrl_pts,1))    
     SPL_v_dBA              = np.zeros((ctrl_pts,1))
                                       
-    total_p_pref_r_GD         = []
     total_p_pref_r_BM         = []
     total_p_pref_r_H          = []
     total_p_pref_v            = [] 
-    total_p_pref_GDv_dBA      = []
     total_p_pref_BMv_dBA      = []
     total_p_pref_Hv_dBA       = []
     total_p_pref_v_dBA        = []
     
-    harmonics    = np.arange(1,19)  # change to 21
+    harmonics    = np.arange(1,21)   
     num_h        = len(harmonics)    
     
     for prop  in noise_data.values():            
@@ -72,53 +67,32 @@ def propeller_noise_low_fidelity(noise_data,ctrl_pts):
         p_pref_r_GD_dBA_simp = np.zeros_like(SPL_r_GD)
         p_pref_r_GD_dBA      = np.zeros_like(SPL_r_GD)
         p_pref_r_BM_dBA      = np.zeros_like(SPL_r_GD)
-        p_pref_r_H_dBA       = np.zeros_like(SPL_r_GD)
- 
-        #m              = harmonics                                             # harmonic number 
-        #p_ref          = 2e-5                                                  # referece atmospheric pressure
-        #a              = segment.conditions.freestream.speed_of_sound          # speed of sound
-        #rho            = segment.conditions.freestream.density                 # air density 
-        #x              = 0 #segment.conditions.frames.inertial.position_vector[:,0] # x  relative position from observer
-        #y              = 0 #segment.conditions.frames.inertial.position_vector[:,0] # y  relative position from observer currently only computing directly below aircraft
-        #z              = segment.conditions.frames.inertial.position_vector[:,0]    # z relative position from observer
-        #Vx             = segment.conditions.frames.inertial.velocity_vector[:,0]    # x velocity of propeller  
-        #Vy             = segment.conditions.frames.inertial.velocity_vector[:,0]    # y velocity of propeller 
-        #Vz             = segment.conditions.frames.inertial.velocity_vector[:,0]    # z velocity of propeller 
-        #thrust_angle   = prop.thrust_angle                                     # propeller thrust angle
-        #alpha          = segment.conditions.aerodynamics.angle_of_attack       # vehicle angle of attack                                            
-        #N              = prop.number_of_engines                                   # numner of engines
-        #B              = prop.number_of_blades                                    # number of rotor blades
-        #omega          = prop.omega                                            # angular velocity     
-        #T              = prop.blade_T                                          # rotor blade thrust     
-        #T_distribution = prop.blade_T_distribution                             # rotor blade thrust distribution  
-        #dT_dR          = prop.blade_dT_dR                                      # differential thrust distribution
-        #dT_dr          = prop.blade_dT_dr                                      # nondimensionalized differential thrust distribution 
-        #Q              = prop.blade_Q                                          # rotor blade torque    
-        #Q_distribution = prop.blade_Q_distribution                             # rotor blade torque distribution  
-        #dQ_dR          = prop.blade_dT_dR                                      # differential torque distribution
-        #dQ_dr          = prop.blade_dT_dr                                      # nondimensionalized differential torque distribution
-        #R              = prop.radius_distribution                              # radial location     
-        #b              = prop.chord_distribution                               # blade chord    
-        #beta           = prop.twist_distribution                               # twist distribution  
-        #t              = prop.max_thickness_distribution                       # thickness distribution
-        #MCA            = prop.mid_chord_aligment                               # Mid Chord Alighment 
-        
-        
-        dim_p = len(prop.radius_distribution)
-        observer_angle = np.pi/4 # observer angle = 45 degrees below propeller
+        p_pref_r_H_dBA       = np.zeros_like(SPL_r_GD) 
+         
+        dim_p          = len(prop.radius_distribution)
+                                                                                                                                                    # observer angle = 45 degrees below propeller
+        # atmospheric conditions 
         m              = np.repeat(np.tile(np.atleast_2d(harmonics),(ctrl_pts,1))[:, :, np.newaxis], dim_p, axis=2)                                 # harmonic number 
         p_ref          = 2e-5                                                                                                                       # referece atmospheric pressure
-        a              = np.repeat(np.tile(np.atleast_2d(prop.speed_of_sound),(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                          # speed of sound
-        rho            = np.repeat(np.tile(np.atleast_2d(prop.density),(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                                 # air density 
-        x              = np.repeat(np.tile(np.atleast_2d(prop.position[:,0]).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                         # x relative position from observer
-        y              = np.repeat(np.tile(np.atleast_2d(prop.position[:,2]).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2)/np.tan(observer_angle)  # y relative position from observer , currently taken as 45 degrees below the object
-        z              = np.repeat(np.tile(np.atleast_2d(prop.position[:,2]).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                         # z relative position from observer
-        Vx             = np.repeat(np.tile(np.atleast_2d(prop.velocity[:,0]).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                         # x velocity of propeller  
-        Vy             = np.repeat(np.tile(np.atleast_2d(prop.velocity[:,1]).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                         # y velocity of propeller 
-        Vz             = np.repeat(np.tile(np.atleast_2d(prop.velocity[:,2]).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                         # z velocity of propeller 
+        a              = np.repeat(np.tile(np.atleast_2d(segment.conditions.freestream.speed_of_sound),(1,num_h))[:, :, np.newaxis], dim_p, axis=2) # speed of sound
+        rho            = np.repeat(np.tile(np.atleast_2d(segment.conditions.freestream.density),(1,num_h))[:, :, np.newaxis], dim_p, axis=2)        # air density 
+       
+        # position of noise source and observer 
+        observer_angle = np.pi/4   
+        x_prop         = segment.conditions.frames.inertial.position_vector[:,0]                                                                         
+        y_prop         = segment.conditions.frames.inertial.position_vector[:,1]                          # currently in suave this is 0 i.e. vertical flight
+        z_prop         = segment.conditions.frames.inertial.position_vector[:,2]                          # noise source at altitide              
+        x_obs          = segment.conditions.frames.inertial.position_vector[:,0]                          # currently observer is moving with noise source 
+        y_obs          = segment.conditions.frames.inertial.position_vector[:,2] /np.tan(observer_angle)  # currently taken at 45 degrees below noise source
+        z_obs          = np.zeros_like(segment.conditions.frames.inertial.position_vector[:,2])           # ground = 0 altitide
+
+        # velocity 
+        v_vector      = prop.velocity      
+        
+        # propeller attributes 
         thrust_angle   = prop.thrust_angle                                                                                                          # propeller thrust angle
-        AoA            = prop.AoA                                                                                                                   # vehicle angle of attack                                            
-        N              = prop.number_of_engines                                                                                                     # numner of engines
+        AoA            = segment.conditions.aerodynamics.angle_of_attack                                                                            # vehicle angle of attack                                            
+        N              = prop.number_of_engines                                                                                                     # number of engines
         B              = prop.number_of_blades                                                                                                      # number of rotor blades
         omega          = np.repeat(np.tile(np.atleast_2d(prop.omega),(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                                   # angular velocity            
         dT_dR          = np.repeat(prop.blade_dT_dR[:, np.newaxis, :], num_h, axis=1)                                                               # differential thrust distribution
@@ -129,44 +103,86 @@ def propeller_noise_low_fidelity(noise_data,ctrl_pts):
         b              = np.repeat(np.tile(np.atleast_2d(prop.chord_distribution),(ctrl_pts,1))[:, np.newaxis, :], num_h, axis=1)                   # blade chord    
         beta           = np.repeat(np.tile(np.atleast_2d(prop.twist_distribution),(ctrl_pts,1))[:, np.newaxis, :], num_h, axis=1)                   # twist distribution  
         t              = np.repeat(np.tile(np.atleast_2d(prop.max_thickness_distribution),(ctrl_pts,1))[:, np.newaxis, :], num_h, axis=1)           # twist distribution
-        MCA            = np.repeat(np.tile(np.atleast_2d(prop.mid_chord_aligment),(ctrl_pts,1))[:, np.newaxis, :], num_h, axis=1)                   # Mid Chord Alighment         
-        
-        
-
-        # Coordinate geometry 
+        MCA            = np.repeat(np.tile(np.atleast_2d(prop.mid_chord_aligment),(ctrl_pts,1))[:, np.newaxis, :], num_h, axis=1)                   # Mid Chord Alighment          
+            
         # angle between flight path and propeller axis i.e. thrust vector axis
-        alpha    =  AoA + thrust_angle
-        hover_ascent  = np.where(AoA <= 0)
-        hover_descent = np.where(AoA >= np.pi)
-        alpha[hover_ascent]  = thrust_angle[hover_ascent]
-        alpha[hover_descent] = thrust_angle[hover_descent]
-         
-        # theta, angle between flight direction and r, the vector from the observer to the noise source
-        r_vector = np.array([ -x , -y , z ])
-        v_vector = np.array([ Vx , Vy , Vz])  # flight direction vector, Vy should be zero  #v_vector = np.array([np.cos(alpha), 0.,np.sin(alpha)]) 
-        theta    = np.arccos(np.dot(r_vector, v_vector)/(np.linalg.norm(r_vector) *np.linalg.norm(v_vector) ))
+        alpha                = AoA + thrust_angle
+        hover_ascent         = np.where(AoA <= 0)         # the AoA of a vertical climb is -90
+        hover_descent        = np.where(AoA >= np.pi)     # the AoA of a verticle descent is +90
+        alpha[hover_ascent]  = thrust_angle
+        alpha[hover_descent] = thrust_angle
         
-        # observer distance from propeller axis 
-        AB_vec = np.array([np.cos(alpha), 0.,np.sin(alpha)])
-        AC_vec = np.array([ x , y , -z ]) 
+        # condition if vehicle is not moving 
+        for i in range(ctrl_pts):
+            if all(v_vector[i,:]) == 0.:
+                v_vector[i,0] = np.cos(thrust_angle)
+                v_vector[i,1] = 0.
+                v_vector[i,2] = np.sin(thrust_angle)
+                 
+        # theta, angle between flight direction and r, the vector from the propeller center axis at the emission point to the observer 
+        P          = np.zeros((ctrl_pts,3))
+        P[:,0]     = x_prop[:]  # propeller x location    
+        P[:,1]     = y_prop[:]  # propeller y location 
+        P[:,2]     = z_prop[:]  # propeller z location 
+        O          = np.zeros((ctrl_pts,3))
+        O[:,0]     = x_obs[:]  # propeller x location    
+        O[:,1]     = y_obs[:]  # propeller y location 
+        O[:,2]     = z_obs[:]  # propeller z location         
+         
+        PO_vec     = O - P      # called r in Hanson, the vector from the propeller center axis at the emission point to the observer  
+        S          = np.linalg.norm(PO_vec, axis = 1)                          # distance between rotor and         
+        theta      = np.arccos(np.sum(PO_vec*v_vector, axis=1)/(np.linalg.norm(PO_vec, axis = 1) *np.linalg.norm(v_vector, axis = 1))) # Source : https://onlinemschool.com/math/library/vector/angl/
+        phi           = np.arctan(z_obs/y_obs)  # tangential angle  
+        
+        # observer distance from propeller axis  
+        PA_vec      = np.zeros((ctrl_pts,3))
+        PA_vec[:,0] = np.cos(alpha).T[0]           # propeller x location    
+        PA_vec[:,1] = 0.                           # propeller y location 
+        PA_vec[:,2] = np.sin(alpha).T[0]           # propeller z location          
+        
+        mag_PA         = np.atleast_2d(np.linalg.norm(PA_vec, axis = 1)).T
+        normal_PA      = PA_vec / mag_PA
+        mag_normal_PA  = np.atleast_2d(np.linalg.norm(normal_PA , axis = 1)).T
+        D1             = np.atleast_2d(np.sum(normal_PA *P, axis=1)).T  # dot product 
+        d1             = np.abs(D1/mag_normal_PA)
+        D2             = np.atleast_2d(np.sum(normal_PA *O, axis=1)).T  # dot product 
+        d2             = np.abs(D2/mag_normal_PA )        
+        X              = d1 + d2                                                                    # distance to observer from propeller plane (z_obs):  Source of equation https://www.math.tamu.edu/~glahodny/Math251/Section%2011.4.pdf ,  https://www.youtube.com/watch?v=Noes0nOvLg4  
+        Y              = np.atleast_2d(np.linalg.norm(np.cross(PO_vec,PA_vec) , axis = 1)).T/mag_PA # observer distance from propeller axis: Source (method 2) :https://www.qc.edu.hk/math/Advanced%20Level/Point_to_line.htm    
+        
+        # Coordinate geometry  
+        n        = len(R[0,0,:])
+        R_tip    = R[0,0,-1]                                                 # Rotor Tip Radius     
+        r        = R/R_tip                                                   # non dimensional radius distribution 
+        dR       = R[0,0,1] - R[0,0,0]                                      
+        dr       = r[0,0,1] - r[0,0,0]                                        
+        A        = np.pi*(R_tip**2)                                          # rotor Disc Area 
+              
+        # Reshape vectors for calculations
+        # dimension of vectors = [control point; harmonic ; propeller axis]
+        V        = np.atleast_2d(np.linalg.norm(v_vector, axis = 1)).T                  # velocity magnitude 
+        V        = np.repeat(np.tile(np.atleast_2d(V),(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                               
+        Y        = np.repeat(np.tile(np.atleast_2d(Y),(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                         
+        X        = np.repeat(np.tile(np.atleast_2d(X),(1,num_h))[:, :, np.newaxis], dim_p, axis=2)                               
+        S        = np.repeat(np.tile(np.atleast_2d(S).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2)
+        x_obs    = np.repeat(np.tile(np.atleast_2d(x_obs).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2) 
+        phi      = np.repeat(np.tile(np.atleast_2d(phi).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2) 
+        theta    = np.repeat(np.tile(np.atleast_2d(theta).T,(1,num_h))[:, :, np.newaxis], dim_p, axis=2)
+        alpha    = np.repeat(np.tile(np.atleast_2d(alpha),(1,num_h))[:, :, np.newaxis], dim_p, axis=2)  
         
         # A-Weighting for Rotational Noise
-        
         '''A-weighted sound pressure level can be obtained by applying A(f) to the
         sound pressure level for each harmonic, then adding the results using the
         method in Appendix B.
         '''
-        f  = B*omega*m/(2*np.pi)  
+        f  = B*omega*m/(2*np.pi) 
         
         #------------------------------------------------------------------------
         # Rotational SPL  by Barry & Magliozzi
         #------------------------------------------------------------------------
-        Y            = np.cross(AC_vec,AB_vec)/np.linalg.norm(AB_vec)  # observer distance from propeller axis           
-        X            = np.sqrt(x**2 + z**2)                 # distance to observer from propeller plane (z)  # CORRECT 
-        V            = np.sqrt(Vx**2 + Vy**2 + Vz**2)       # velocity magnitude
-        M            = V/a                                  # Mach number
-        S0           = np.sqrt(x**2 + (1 - M**2)*(Y**2))    # amplitude radius    
-        A_x          = 0.6853* b*t                           # airfoil cross-sectional area
+        M            = V/a                                             # Mach number
+        S0           = np.sqrt(x_obs**2 + (1 - M**2)*(Y**2))           # amplitude radius    
+        A_x          = 0.6853* b*t                                     # airfoil cross-sectional area
         # compute phi_t, blade twist angle relative to propeller plane
         phi_t = np.zeros(n) 
         phi_t = np.pi/2 + abs(beta) 
@@ -201,7 +217,6 @@ def propeller_noise_low_fidelity(noise_data,ctrl_pts):
         M_t           = V_tip/a                                                                                 # tip Mach number 
         M_s           = np.sqrt(M**2 + (r**2)*(M_t**2))                                                         # section relative Mach number 
         r_t           = R_tip                                                                                   # propeller tip radius
-        phi           = np.arctan(z/y)                                                                          # tangential angle  
         theta_r       = np.arccos(np.cos(theta)*np.sqrt(1 - (M**2)*(np.sin(theta))**2) + M*(np.sin(theta))**2 ) # theta angle in the retarded reference frame
         theta_r_prime = np.arccos(np.cos(theta_r)*np.cos(alpha) + np.sin(theta_r)*np.sin(phi)*np.sin(alpha) )   #
         phi_prime     = np.arccos((np.sin(theta_r)/np.sin(theta_r_prime))*np.cos(phi))                          # phi angle relative to propeller shaft axis                                                   
@@ -265,47 +280,40 @@ def propeller_noise_low_fidelity(noise_data,ctrl_pts):
         C[:,-1]       = SPL_v_dbAi[:,-1] - C[:,-2]*np.log10(fr[:,-1])   
         p_pref_v_dBA  = (10**(0.1*C[:,1:]))* (  ((fr[:,1:]**(0.1*C[:,:-1] + 1 ))/(0.1*C[:,:-1] + 1 )) - ((fr[:,:-1]**(0.1*C[:,:-1] + 1 ))/(0.1*C[:,:-1] + 1 )) )
          
-        prop.SPL_GD_unweighted       = SPL_r_GD
         prop.SPL_BM_unweighted       = SPL_r_BM 
         prop.SPL_H_unweighted        = SPL_r_H  
         prop.SPL_v_unweighted        = SPL_v
         
-        # collecting unweighted pressure ratios           
-        total_p_pref_r_GD.append(p_pref_r_GD)  
+        # collecting unweighted pressure ratios     
         total_p_pref_r_BM.append(p_pref_r_BM)  
         total_p_pref_r_H.append(p_pref_r_H)    
         total_p_pref_v.append(p_pref_v)
         
         # collecting weighted pressure ratios with vortex noise included 
-        total_p_pref_GDv_dBA.append(np.hstack((p_pref_r_GD_dBA,p_pref_v_dBA))) 
         total_p_pref_BMv_dBA.append(np.hstack((p_pref_r_BM_dBA,p_pref_v_dBA))) 
         total_p_pref_Hv_dBA.append(np.hstack((p_pref_r_H_dBA,p_pref_v_dBA)))   
         total_p_pref_v_dBA.append(p_pref_v_dBA)
     
     # Rotational SPL (Unweighted)    
-    SPL_GD_unweighted      = np.atleast_2d(decibel_arithmetic(p_pref_r_GD)).T       # Gutin & Deming rotational noise with Schlegel vortex noise
     SPL_BM_unweighted      = np.atleast_2d(decibel_arithmetic(p_pref_r_BM)).T       # Barry & Magliozzi rotational noise with Schlegel vortex noise
     SPL_H_unweighted       = np.atleast_2d(decibel_arithmetic(p_pref_r_H)).T        # Hanson rotational noise with Schlegel vortex noise         
     SPL_v_unweighted       = np.atleast_2d(decibel_arithmetic(p_pref_v)).T
     
     # A- Weighted Rotational and Vortex SPL 
-    SPL_GDv_dBA      = np.atleast_2d(decibel_arithmetic(total_p_pref_GDv_dBA)).T
     SPL_BMv_dBA      = np.atleast_2d(decibel_arithmetic(total_p_pref_BMv_dBA)).T
     SPL_Hv_dBA       = np.atleast_2d(decibel_arithmetic(total_p_pref_Hv_dBA)).T
     SPL_v_dBA        = np.atleast_2d(decibel_arithmetic(total_p_pref_v_dBA)).T
     
     noise_data.acoustic_results = Data( 
-        SPL_GD_unweighted      =  SPL_GD_unweighted ,
         SPL_BM_unweighted      =  SPL_BM_unweighted ,
         SPL_H_unweighted       =  SPL_H_unweighted,  
         SPL_v_unweighted       =  SPL_v_unweighted ,   
-        SPL_GDv_dBA            =  SPL_GDv_dBA,       
         SPL_BMv_dBA            =  SPL_BMv_dBA ,      
         SPL_Hv_dBA             =  SPL_Hv_dBA,            
         SPL_v_dBA              =  SPL_v_dBA
         )
     
-    return SPL_GD_unweighted , SPL_BM_unweighted , SPL_H_unweighted , SPL_v_unweighted , SPL_GDv_dBA  , SPL_BMv_dBA , SPL_Hv_dBA , SPL_v_dBA   
+    return SPL_BM_unweighted , SPL_H_unweighted , SPL_v_unweighted  , SPL_BMv_dBA , SPL_Hv_dBA , SPL_v_dBA   
     #return
 # -----------------------------------------------------------------------
 # Decibel Arithmetic
