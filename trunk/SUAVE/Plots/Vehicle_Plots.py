@@ -125,6 +125,7 @@ def plot_propeller_geometry_3D(prop, line_color = 'bo-', save_figure = False, sa
 # ------------------------------------------------------------------
 def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_filename = "Propeller_Geometry"):   
     # unpack
+    name   = prop.tag
     Rt     = prop.tip_radius          
     Rh     = prop.hub_radius          
     num_B  = prop.number_of_blades       
@@ -138,15 +139,18 @@ def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_
     fig = plt.figure(save_filename) 
     fig.set_size_inches(6, 8)     
     axes = fig.add_subplot(3,1,1)
-    axes.plot(r*Rt, b, line_color)
-    axes.set_ylabel('Chord')
+    axes.plot(r*Rt, b, line_color, label = name)
+    axes.legend(loc='upper center')
+    axes.set_ylabel('Chord (m)')
+    axes.set_xlabel('Span (m)')
     axes.get_yaxis().get_major_formatter().set_scientific(False)
     axes.get_yaxis().get_major_formatter().set_useOffset(False)        
     axes.grid(True)
     
     axes = fig.add_subplot(3,1,2)
-    axes.plot(r*Rt, beta, line_color)
-    axes.set_ylabel('Twist')
+    axes.plot(r*Rt, beta/Units.degrees, line_color)
+    axes.set_ylabel('Twist (deg)')
+    axes.set_xlabel('Span (m)')
     axes.get_yaxis().get_major_formatter().set_scientific(False)
     axes.get_yaxis().get_major_formatter().set_useOffset(False)        
     axes.grid(True)
@@ -154,6 +158,7 @@ def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_
     axes = fig.add_subplot(3,1,3)
     axes.plot(r*Rt, t, line_color)
     axes.set_ylabel('Thickness')
+    axes.set_xlabel('Span (m)')
     axes.get_yaxis().get_major_formatter().set_scientific(False)
     axes.get_yaxis().get_major_formatter().set_useOffset(False)        
     axes.grid(True)    

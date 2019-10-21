@@ -28,12 +28,12 @@ def propeller_noise_low_fidelity(segment):
            - The three methods used to compute rotational noise SPL are 1) Gutin and Deming, 2) Barry and Magliozzi and 3) Hanson
            - Vortex noise is computed using the method outlined by Schlegel et. al 
     '''
-    
+    harmonics    = np.arange(1,21)   
+    num_h        = len(harmonics)     
     noise_data = segment.conditions.propulsion.acoustic_outputs
-    ctrl_pts   = segment.state.numerics.number_control_points
-    segment.conditions.freestream.velocity
-    segment.conditions.frames.inertial.position_vector 
- 
+    ctrl_pts   = segment.state.numerics.number_control_points 
+    num_pt     = len(noise_data.values())
+    
     SPL_BM_unweighted      = np.zeros((ctrl_pts,1))
     SPL_H_unweighted       = np.zeros((ctrl_pts,1))
     SPL_v_unweighted       = np.zeros((ctrl_pts,1)) 
@@ -41,16 +41,15 @@ def propeller_noise_low_fidelity(segment):
     SPL_Hv_dBA             = np.zeros((ctrl_pts,1))    
     SPL_v_dBA              = np.zeros((ctrl_pts,1))
                                       
-    total_p_pref_r_BM         = []
-    total_p_pref_r_H          = []
-    total_p_pref_v            = [] 
-    total_p_pref_BMv_dBA      = []
-    total_p_pref_Hv_dBA       = []
-    total_p_pref_v_dBA        = []
+    total_p_pref_r_BM         = np.zeros((ctrl_pts,num_pt*(num_h)))
+    total_p_pref_r_H          = np.zeros((ctrl_pts,num_pt*(num_h)))
+    total_p_pref_v            = np.zeros((ctrl_pts,num_pt*(6))) 
+    total_p_pref_BMv_dBA      = np.zeros((ctrl_pts,num_pt*(num_h + 5)))
+    total_p_pref_Hv_dBA       = np.zeros((ctrl_pts,num_pt*(num_h + 5)))
+    total_p_pref_v_dBA        = np.zeros((ctrl_pts,num_pt*(num_h + 5)))
     
-    harmonics    = np.arange(1,21)   
-    num_h        = len(harmonics)    
-    
+   
+    idx = 0 
     for prop  in noise_data.values():            
         SPL_r_GD          = np.zeros((ctrl_pts,num_h))
         SPL_r_BM          = np.zeros_like(SPL_r_GD)
@@ -79,11 +78,11 @@ def propeller_noise_low_fidelity(segment):
        
         # position of noise source and observer 
         observer_angle = np.pi/4   
-        x_prop         = segment.conditions.frames.inertial.position_vector[:,0]                                                                         
-        y_prop         = segment.conditions.frames.inertial.position_vector[:,1]                          # currently in suave this is 0 i.e. vertical flight
-        z_prop         = segment.conditions.frames.inertial.position_vector[:,2]                          # noise source at altitide              
-        x_obs          = segment.conditions.frames.inertial.position_vector[:,0]                          # currently observer is moving with noise source 
-        y_obs          = segment.conditions.frames.inertial.position_vector[:,2] /np.tan(observer_angle)  # currently taken at 45 degrees below noise source
+        x_prop         = -segment.conditions.frames.inertial.position_vector[:,0]                                                                         
+        y_prop         = -segment.conditions.frames.inertial.position_vector[:,1]                          # currently in suave this is 0 i.e. vertical flight
+        z_prop         = -segment.conditions.frames.inertial.position_vector[:,2]                          # noise source at altitide              
+        x_obs          = -segment.conditions.frames.inertial.position_vector[:,0]                          # currently observer is moving with noise source 
+        y_obs          = -segment.conditions.frames.inertial.position_vector[:,2] /np.tan(observer_angle)  # currently taken at 45 degrees below noise source
         z_obs          = np.zeros_like(segment.conditions.frames.inertial.position_vector[:,2])           # ground = 0 altitide
 
         # velocity 
@@ -104,7 +103,10 @@ def propeller_noise_low_fidelity(segment):
         beta           = np.repeat(np.tile(np.atleast_2d(prop.twist_distribution),(ctrl_pts,1))[:, np.newaxis, :], num_h, axis=1)                   # twist distribution  
         t              = np.repeat(np.tile(np.atleast_2d(prop.max_thickness_distribution),(ctrl_pts,1))[:, np.newaxis, :], num_h, axis=1)           # twist distribution
         MCA            = np.repeat(np.tile(np.atleast_2d(prop.mid_chord_aligment),(ctrl_pts,1))[:, np.newaxis, :], num_h, axis=1)                   # Mid Chord Alighment          
-            
+        
+        if omega[idx,:].all()==0: # if no rpm, no acoustic measurement is computed
+            continue 
+        
         # angle between flight path and propeller axis i.e. thrust vector axis
         alpha                = AoA + thrust_angle
         hover_ascent         = np.where(AoA <= 0)         # the AoA of a vertical climb is -90
@@ -114,7 +116,7 @@ def propeller_noise_low_fidelity(segment):
         
         # condition if vehicle is not moving 
         for i in range(ctrl_pts):
-            if all(v_vector[i,:]) == 0.:
+            if v_vector[i,:].all() == 0.:
                 v_vector[i,0] = np.cos(thrust_angle)
                 v_vector[i,1] = 0.
                 v_vector[i,2] = np.sin(thrust_angle)
@@ -234,7 +236,7 @@ def propeller_noise_low_fidelity(segment):
                   *np.sum(( (   (np.cos(theta_r_prime)/(1 - M*np.cos(theta_r)))*(dT_dr) - (1/((r**2)*M_t*r_t))*(dQ_dr)  ) * np.exp(1j*phi_s) *\
                        (jv(m*B,((m*B*r*M_t*np.sin(theta_r_prime))/(1 - M*np.cos(theta_r))))) * psi_L  )* dr , axis = 2)  
         p_mL_H[np.isinf(p_mL_H)] = 0
-        p_mL_H = abs(p_mL_H)
+        p_mL_H = abs(p_mL_H) 
         
         # sound pressure for thickness noise 
         p_mT_H = (-(rho*(a**2)*B*np.sin(theta_r)*np.exp(1j*m*B*((omega*S_r/a)+(phi_prime - np.pi/2))))/(4*np.sqrt(2)*np.pi*(Y/D)*(1 - M*np.cos(theta_r))))[:,:,0] \
@@ -280,41 +282,68 @@ def propeller_noise_low_fidelity(segment):
         C[:,-1]       = SPL_v_dbAi[:,-1] - C[:,-2]*np.log10(fr[:,-1])   
         p_pref_v_dBA  = (10**(0.1*C[:,1:]))* (  ((fr[:,1:]**(0.1*C[:,:-1] + 1 ))/(0.1*C[:,:-1] + 1 )) - ((fr[:,:-1]**(0.1*C[:,:-1] + 1 ))/(0.1*C[:,:-1] + 1 )) )
          
-        prop.SPL_BM_unweighted       = SPL_r_BM 
-        prop.SPL_H_unweighted        = SPL_r_H  
-        prop.SPL_v_unweighted        = SPL_v
+    
+        # make all nan's and inf's (where observer and propeller are cooincident = 0)
+        p_pref_r_BM[p_pref_r_BM==np.inf]           = 0.0
+        p_pref_r_H[p_pref_r_H==np.inf]             = 0.0 
+        p_pref_v[p_pref_v==np.inf]                 = 0.0 
+        p_pref_r_BM_dBA[p_pref_r_BM_dBA==np.inf]   = 0.0       
+        p_pref_r_H_dBA[p_pref_r_H_dBA==np.inf]     = 0.0         
+        p_pref_v_dBA[p_pref_v_dBA==np.inf]         = 0.0
+        p_pref_r_BM[np.isnan(p_pref_r_BM)]         = 0.0
+        p_pref_r_H[np.isnan(p_pref_r_H)]           = 0.0 
+        p_pref_v[np.isnan(p_pref_v)]               = 0.0 
+        p_pref_r_BM_dBA[np.isnan(p_pref_r_BM_dBA)] = 0.0       
+        p_pref_r_H_dBA[np.isnan(p_pref_r_H_dBA)]   = 0.0         
+        p_pref_v_dBA[np.isnan(p_pref_v_dBA)]       = 0.0           
+        
         
         # collecting unweighted pressure ratios     
-        total_p_pref_r_BM.append(p_pref_r_BM)  
-        total_p_pref_r_H.append(p_pref_r_H)    
-        total_p_pref_v.append(p_pref_v)
+        total_p_pref_r_BM[:,idx*(num_h):(idx+1)*(num_h)] = p_pref_r_BM
+        total_p_pref_r_H[:,idx*(num_h):(idx+1)*(num_h)]  = p_pref_r_H     
+        total_p_pref_v[:,idx*(6):(idx+1)*(6)]            = p_pref_v 
         
         # collecting weighted pressure ratios with vortex noise included 
-        total_p_pref_BMv_dBA.append(np.hstack((p_pref_r_BM_dBA,p_pref_v_dBA))) 
-        total_p_pref_Hv_dBA.append(np.hstack((p_pref_r_H_dBA,p_pref_v_dBA)))   
-        total_p_pref_v_dBA.append(p_pref_v_dBA)
+        total_p_pref_BMv_dBA[:,idx*(num_h+5):(idx+1)*(num_h+5)] = np.hstack((p_pref_r_BM_dBA,p_pref_v_dBA))
+        total_p_pref_Hv_dBA[:,idx*(num_h+5):(idx+1)*(num_h+5)]  = np.hstack((p_pref_r_H_dBA,p_pref_v_dBA))   
+        total_p_pref_v_dBA[:,idx*(5):(idx+1)*(5)]               = p_pref_v_dBA
+        
+        idx += 1
+    
     
     # Rotational SPL (Unweighted)    
-    SPL_BM_unweighted      = np.atleast_2d(decibel_arithmetic(p_pref_r_BM)).T       # Barry & Magliozzi rotational noise with Schlegel vortex noise
-    SPL_H_unweighted       = np.atleast_2d(decibel_arithmetic(p_pref_r_H)).T        # Hanson rotational noise with Schlegel vortex noise         
-    SPL_v_unweighted       = np.atleast_2d(decibel_arithmetic(p_pref_v)).T
+    SPL_BM_unweighted      = np.atleast_2d(decibel_arithmetic(total_p_pref_r_BM)).T       # Barry & Magliozzi rotational noise with Schlegel vortex noise
+    SPL_H_unweighted       = np.atleast_2d(decibel_arithmetic(total_p_pref_r_H)).T        # Hanson rotational noise with Schlegel vortex noise         
+    SPL_v_unweighted       = np.atleast_2d(decibel_arithmetic(total_p_pref_v)).T
     
     # A- Weighted Rotational and Vortex SPL 
     SPL_BMv_dBA      = np.atleast_2d(decibel_arithmetic(total_p_pref_BMv_dBA)).T
     SPL_Hv_dBA       = np.atleast_2d(decibel_arithmetic(total_p_pref_Hv_dBA)).T
     SPL_v_dBA        = np.atleast_2d(decibel_arithmetic(total_p_pref_v_dBA)).T
     
-    noise_data.acoustic_results = Data( 
-        SPL_BM_unweighted      =  SPL_BM_unweighted ,
-        SPL_H_unweighted       =  SPL_H_unweighted,  
-        SPL_v_unweighted       =  SPL_v_unweighted ,   
-        SPL_BMv_dBA            =  SPL_BMv_dBA ,      
-        SPL_Hv_dBA             =  SPL_Hv_dBA,            
-        SPL_v_dBA              =  SPL_v_dBA
-        )
+    # make all nan's and inf's (where observer and propeller are cooincident = 0)
+    SPL_BM_unweighted[SPL_BM_unweighted==np.inf]    = 0.0
+    SPL_H_unweighted[SPL_H_unweighted==np.inf]      = 0.0 
+    SPL_v_unweighted[SPL_v_unweighted==np.inf]      = 0.0 
+    SPL_BMv_dBA[SPL_BMv_dBA==np.inf]                = 0.0       
+    SPL_Hv_dBA[SPL_Hv_dBA==np.inf]                  = 0.0         
+    SPL_v_dBA [SPL_v_dBA ==np.inf]                  = 0.0
+    SPL_BM_unweighted[np.isnan(SPL_BM_unweighted)]  = 0.0
+    SPL_H_unweighted[np.isnan(SPL_H_unweighted)]    = 0.0 
+    SPL_v_unweighted[np.isnan(SPL_v_unweighted)]    = 0.0 
+    SPL_BMv_dBA[np.isnan(SPL_BMv_dBA)]              = 0.0       
+    SPL_Hv_dBA[np.isnan(SPL_Hv_dBA)]                = 0.0         
+    SPL_v_dBA [np.isnan(SPL_v_dBA )]                = 0.0      
     
-    return SPL_BM_unweighted , SPL_H_unweighted , SPL_v_unweighted  , SPL_BMv_dBA , SPL_Hv_dBA , SPL_v_dBA   
-    #return
+    noise_data.acoustic_results = Data()
+    noise_data.acoustic_results.SPL_BM_unweighted      =  SPL_BM_unweighted  
+    noise_data.acoustic_results.SPL_H_unweighted       =  SPL_H_unweighted 
+    noise_data.acoustic_results.SPL_v_unweighted       =  SPL_v_unweighted  
+    noise_data.acoustic_results.SPL_BMv_dBA            =  SPL_BMv_dBA       
+    noise_data.acoustic_results.SPL_Hv_dBA             =  SPL_Hv_dBA        
+    noise_data.acoustic_results.SPL_v_dBA              =  SPL_v_dBA
+          
+    return   
 # -----------------------------------------------------------------------
 # Decibel Arithmetic
 # -----------------------------------------------------------------------
