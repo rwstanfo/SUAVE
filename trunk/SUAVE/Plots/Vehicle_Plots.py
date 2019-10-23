@@ -145,7 +145,7 @@ def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_
     axes.set_xlabel('Span (m)')
     axes.get_yaxis().get_major_formatter().set_scientific(False)
     axes.get_yaxis().get_major_formatter().set_useOffset(False)        
-    axes.grid(True)
+    #axes.grid(True)
     
     axes = fig.add_subplot(3,1,2)
     axes.plot(r*Rt, beta/Units.degrees, line_color)
@@ -153,15 +153,15 @@ def plot_propeller_geometry(prop, line_color = 'bo-', save_figure = False, save_
     axes.set_xlabel('Span (m)')
     axes.get_yaxis().get_major_formatter().set_scientific(False)
     axes.get_yaxis().get_major_formatter().set_useOffset(False)        
-    axes.grid(True)
+    #axes.grid(True)
     
     axes = fig.add_subplot(3,1,3)
     axes.plot(r*Rt, t, line_color)
-    axes.set_ylabel('Thickness')
+    axes.set_ylabel('Thickness (m)')
     axes.set_xlabel('Span (m)')
     axes.get_yaxis().get_major_formatter().set_scientific(False)
     axes.get_yaxis().get_major_formatter().set_useOffset(False)        
-    axes.grid(True)    
+    #axes.grid(True)    
         
     if save_figure:
         plt.savefig(save_filename + ".png")   
