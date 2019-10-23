@@ -3,7 +3,9 @@
 # sizing.
 # @ingroup Methods-Weights
 
-from . import Electric_Helicopter
-from . import Electric_Lift_Cruise
-from . import Electric_Vectored_Thrust
-from . import Common
+
+import EVTOL
+import Electric_Helicopter
+import Electric_Stopped_Rotor
+import Electric_Tiltrotor
+import Common

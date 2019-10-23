@@ -69,6 +69,12 @@ class Fuselage(Lofted_Body):
         self.width              = 0.0
         
         self.heights = Data()
+        self.heights.maximum                        = 0.0
+        self.heights.at_quarter_length              = 0.0
+        self.heights.at_three_quarters_length       = 0.0
+        self.heights.at_vertical_root_quarter_chord = 0.0
+        
+        self.heights = Data()
         self.heights.maximum                     = 0.0
         self.heights.at_quarter_length           = 0.0
         self.heights.at_three_quarters_length    = 0.0
@@ -90,12 +96,19 @@ class Fuselage(Lofted_Body):
         self.fineness.tail = 0.0
         
         self.differential_pressure = 0.0
+
+        self.materials.skin_materials       = Container()
+        self.materials.canopy_materials     = Container()
+        self.materials.keel_materials       = Container()
+        self.materials.bulkhead_materials   = Container()
+        self.materials.bolt_materials       = Container()
         
         # for BWB 
         self.aft_centerbody_area  = 0.0
         self.aft_centerbody_taper = 0.0
         self.cabin_area           = 0.0       
         self.Fuel_Tanks = Container()
+        self.Batteries  = Container()
 
         # For VSP
         self.vsp_data                = Data()
@@ -144,11 +157,35 @@ class Fuselage(Lofted_Body):
         """ 
 
         # Assert database type
-        if not isinstance(segment,Data):
-            raise Exception('input component must be of type Data()')
-    
+        if not isinstance(fuel_tank,Data):
+            raise Exception('Fuel tanks appended to fuselages must be of type Data()')
+
         # Store data
         self.Fuel_Tanks.append(fuel_tank)
+
+        return
+
+    def append_battery(self, battery):
+        """ Adds a battery to the fuselage
+
+        Assumptions:
+        None
+        Source:
+        N/A
+        Inputs:
+        None
+        Outputs:
+        None
+        Properties Used:
+        N/A
+        """
+
+        #Assert database type
+        if not isinstance(battery, Data):
+            raise Exception('Batteries appended to fuselages must be of type Data()')
+
+        # Store data
+        self.Batteries.append(battery)
 
         return
     
