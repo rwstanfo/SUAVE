@@ -16,8 +16,7 @@ from SUAVE.Methods.Weights.Buildups.Common.wiring import wiring
 from SUAVE.Methods.Weights.Buildups.Common.wing import wing
 
 from SUAVE.Components.Energy.Networks import Battery_Propeller
-from SUAVE.Components.Energy.Networks import Lift_Forward_Propulsor
-
+from SUAVE.Components.Energy.Networks import Lift_Cruise
 import numpy as np
 from warnings import  warn
 
