@@ -80,7 +80,6 @@ def fuselage(config,
 # Unpack Material Properties
 #-------------------------------------------------------------------------------
 
-
     rbmMat = fuse.keel_materials.root_bending_moment_carrier
     rbmDen = rbmMat.density
     rbmUTS = rbmMat.ultimate_tensile_strength

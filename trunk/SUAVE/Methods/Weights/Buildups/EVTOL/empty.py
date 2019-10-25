@@ -108,25 +108,25 @@ def empty(config,
 
     if isinstance(propulsor, Battery_Propeller):
         nLiftProps      = propulsor.number_of_engines
-        nLiftBlades     = propulsor.propeller.prop_attributes.number_blades
-        rTipLiftProp    = propulsor.propeller.prop_attributes.tip_radius
-        rHubLiftProp    = propulsor.propeller.prop_attributes.hub_radius
-        cLiftProp       = propulsor.propeller.prop_attributes.chord_distribution
+        nLiftBlades     = propulsor.propeller.number_of_blades
+        rTipLiftProp    = propulsor.propeller.tip_radius
+        rHubLiftProp    = propulsor.propeller.hub_radius
+        cLiftProp       = propulsor.propeller.chord_distribution
 
-    elif isinstance(propulsor, Lift_Forward_Propulsor):
+    elif isinstance(propulsor, Lift_Cruise):
         nLiftProps      = propulsor.number_of_engines_lift
-        nLiftBlades     = propulsor.propeller_lift.prop_attributes.number_blades
-        rTipLiftProp    = propulsor.propeller_lift.prop_attributes.tip_radius
-        rHubLiftProp    = propulsor.propeller_lift.prop_attributes.hub_radius
-        cLiftProp       = propulsor.propeller_lift.prop_attributes.chord_distribution
+        nLiftBlades     = propulsor.rotor.number_of_blades
+        rTipLiftProp    = propulsor.rotor.tip_radius
+        rHubLiftProp    = propulsor.rotor.hub_radius
+        cLiftProp       = propulsor.rotor.chord_distribution
 
         nThrustProps    = propulsor.number_of_engines_forward
-        nThrustBlades   = propulsor.propeller_forward.prop_attributes.number_blades
-        rTipThrustProp  = propulsor.propeller_forward.prop_attributes.tip_radius
-        rHubThrustProp  = propulsor.propeller_forward.prop_attributes.hub_radius
-        cThrustProp     = propulsor.propeller_forward.prop_attributes.chord_distribution
+        nThrustBlades   = propulsor.propeller.number_of_blades
+        rTipThrustProp  = propulsor.propeller.tip_radius
+        rHubThrustProp  = propulsor.propeller.hub_radius
+        cThrustProp     = propulsor.propeller.chord_distribution
     else:
-        warn("""eVTOL weight buildup only supports the Battery Propeller and Lift Forward Propulsor energy networks.\n
+        warn("""eVTOL weight buildup only supports the Battery Propeller and Lift Cruise energy networks.\n
         Weight buildup will not return information on propulsion system.""", stacklevel=1)
 
     sound       = speed_of_sound
@@ -152,7 +152,7 @@ def empty(config,
         if nLiftProps > 1:
             output.BRS = 16.                        * Units.kg
 
-    elif isinstance(propulsor, Lift_Forward_Propulsor):
+    elif isinstance(propulsor, Lift_Cruise):
         output.servos   = 0.65  * (nLiftProps + nThrustProps)   * Units.kg
         output.hubs     = 2.    * (nLiftProps + nThrustProps)   * Units.kg
         output.BRS      = 16.                                   * Units.kg
@@ -176,7 +176,7 @@ def empty(config,
             liftBladeSol * AvgBladeCD / 8. * maxVTip ** 3 / liftPseudoCT
     )
 
-    if isinstance(propulsor, Lift_Forward_Propulsor):
+    if isinstance(propulsor, Lift_Cruise):
 
         maxThrust = maxLift / 5.                                                    # Assume Conservative L/D of 5
         thrustMeanRad = ((rTipThrustProp ** 2 + rHubThrustProp ** 2) / 2) ** 0.5    # Propeller Mean Radius
@@ -204,16 +204,16 @@ def empty(config,
             output.tail_rotor = prop(propulsor.propeller,
                                      1.5*maxLiftTorque/(1.25*rTipLiftProp))*0.2 * Units.kg
 
-    elif isinstance(propulsor, Lift_Forward_Propulsor):
+    elif isinstance(propulsor, Lift_Cruise):
 
         maxThrustPower = maxThrust * (
             k * np.sqrt(thrustPseudoCT / 2.) +
             thrustBladeSol * AvgBladeCD / 8. * maxVTip **3 / thrustPseudoCT
         )
 
-        output.lift_rotors      = nLiftProps * (propulsor.propeller_lift,
+        output.lift_rotors      = nLiftProps * (propulsor.rotor,
                                     maxLift / max(nLiftProps - 1, 1))           * Units.kg
-        output.thrust_rotors    = prop(propulsor.propeller_forward, maxLift/5.) * Units.kg
+        output.thrust_rotors    = prop(propulsor.propeller, maxLift/5.) * Units.kg
 
         output.lift_motors = (nLiftProps*maxLiftPower/max(nLiftProps-1, 1))/3500* Units.kg  # 3500 W/kg Power Density
         output.thrust_motors = (maxThrustPower/nThrustProps)/3500               * Units.kg
