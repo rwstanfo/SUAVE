@@ -134,10 +134,7 @@ def empty(config,
 
     total_wing_weight = 0.
     output.wings = Data()
-
-
-    
-    
+ 
     for w in config.wings:
         wing_tag = w.tag
         #print('wing_tag =', wing_tag)
