@@ -226,3 +226,25 @@ def empty(config,
 # Pack Up Outputs
 #-------------------------------------------------------------------------------
 
+    output.structural = (output.lift_rotors +
+                         output.thrust_rotors +
+                         output.hubs +
+                         output.fuselage +
+                         output.landing_gear +
+                         output.total_wing_weight
+                         ) * Units.kg
+
+    output.empty = (
+            output.structural +
+            output.seats +
+            output.avionics +
+            output.motors +
+            output.servos +
+            output.wiring +
+            output.brs +
+            output.battery) * Units.kg
+
+    output.total = (output.empty +
+                    output.payload) * Units.kg
+
+    return output

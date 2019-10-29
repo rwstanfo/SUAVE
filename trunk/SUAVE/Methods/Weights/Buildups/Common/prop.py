@@ -147,7 +147,7 @@ def prop(prop,
     glueMGT = glueMat.minimum_gage_thickness
     glueDen = glueMat.density
     
-    coverMat = prop.materials.skin_materials.cover
+    coverMat = prop.materials.skin_materials.covering
     coverMGT = coverMat.minimum_gage_thickness
     coverDen = coverMat.density
 

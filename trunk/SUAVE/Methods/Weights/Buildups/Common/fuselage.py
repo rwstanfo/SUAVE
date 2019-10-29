@@ -142,7 +142,7 @@ def fuselage(config,
     lamVol      = (np.pi*(20*lamThk)**2)*(lamThk/3)     # Laminate Pad volume
     massKeel   += 4*lamVol*bearingDen                   # Mass of 4 Pads
 
-    # Calculate total mass as the sum of skin mass, bulkhead mass, canopy pass,
+    # Calculate total mass as the sum of skin mass, bulkhead mass, canopy mass,
     # and keel mass. Called weight by SUAVE convention
 
     weight = skinMass + bulkheadMass + canopyMass + massKeel
