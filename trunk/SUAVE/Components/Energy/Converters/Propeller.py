@@ -31,19 +31,25 @@ class Propeller(Energy_Component):
     
     Assumptions:
     None
+
     Source:
     None
     """     
     def __defaults__(self):
         """This sets the default values for the component to function.
+
         Assumptions:
         None
+
         Source:
         N/A
+
         Inputs:
         None
+
         Outputs:
         None
+
         Properties Used:
         None
         """         
@@ -66,13 +72,13 @@ class Propeller(Energy_Component):
         
     def spin(self,conditions):
         """Analyzes a propeller given geometry and operating conditions.
-        
+
         Assumptions:
         per source
-        
+
         Source:
         Qprop theory document
-        
+
         Inputs:
         self.inputs.omega            [radian/s]
         conditions.freestream.
@@ -85,7 +91,7 @@ class Propeller(Energy_Component):
           inertial.velocity_vector   [m/s]
         conditions.propulsion.
           throttle                   [-]
-          
+
         Outputs:
         conditions.propulsion.acoustic_outputs.
           number_sections            [-]
@@ -105,6 +111,7 @@ class Propeller(Energy_Component):
         torque                       [Nm]
         power                        [W]
         Cp                           [-] (coefficient of power)
+
         Properties Used:
         self. 
           number_blades              [-]
