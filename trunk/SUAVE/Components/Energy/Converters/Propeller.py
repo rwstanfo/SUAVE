@@ -10,7 +10,8 @@
 # ----------------------------------------------------------------------
 from SUAVE.Components.Energy.Energy_Component import Energy_Component
 from SUAVE.Core import Data
-from SUAVE.Methods.Aerodynamics.XFOIL.compute_airfoil_polars import compute_airfoil_polars
+from SUAVE.Methods.Geometry.Two_Dimensional.Cross_Section.Airfoil.compute_airfoil_polars \
+     import compute_airfoil_polars
 from SUAVE.Methods.Geometry.Three_Dimensional \
      import angles_to_dcms, orientation_product, orientation_transpose
 
@@ -31,25 +32,19 @@ class Propeller(Energy_Component):
     
     Assumptions:
     None
-
     Source:
     None
     """     
     def __defaults__(self):
         """This sets the default values for the component to function.
-
         Assumptions:
         None
-
         Source:
         N/A
-
         Inputs:
         None
-
         Outputs:
         None
-
         Properties Used:
         None
         """         
@@ -72,13 +67,13 @@ class Propeller(Energy_Component):
         
     def spin(self,conditions):
         """Analyzes a propeller given geometry and operating conditions.
-
+        
         Assumptions:
         per source
-
+        
         Source:
         Qprop theory document
-
+        
         Inputs:
         self.inputs.omega            [radian/s]
         conditions.freestream.
@@ -91,7 +86,7 @@ class Propeller(Energy_Component):
           inertial.velocity_vector   [m/s]
         conditions.propulsion.
           throttle                   [-]
-
+          
         Outputs:
         conditions.propulsion.acoustic_outputs.
           number_sections            [-]
@@ -111,7 +106,6 @@ class Propeller(Energy_Component):
         torque                       [Nm]
         power                        [W]
         Cp                           [-] (coefficient of power)
-
         Properties Used:
         self. 
           number_blades              [-]
@@ -527,7 +521,7 @@ class Propeller(Energy_Component):
             if dim_sec != N:
                 raise AssertionError("Number of sections not equal to number of stations")
             # compute airfoil polars for airfoils 
-            airfoil_polars = compute_airfoil_polars(self,conditions, a_sec)
+            airfoil_polars = compute_airfoil_polars(self, a_sec)
             airfoil_cl     = airfoil_polars.CL
             airfoil_cd     = airfoil_polars.CD
             AoA_range      = airfoil_polars.AoA_range

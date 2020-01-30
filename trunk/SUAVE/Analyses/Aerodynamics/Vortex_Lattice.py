@@ -76,7 +76,7 @@ class Vortex_Lattice(Aerodynamics):
         self.settings.number_panels_spanwise = 5
 
         # conditions table, used for surrogate model training
-        self.training = Data()
+        self.training = Data()        
         self.training.angle_of_attack  = np.array([-10.,-5.,0.,5.,10.]) * Units.deg
         self.training.lift_coefficient = None
         
@@ -152,16 +152,16 @@ class Vortex_Lattice(Aerodynamics):
 
         # unpack
 
-        surrogates = self.surrogates
+        surrogates = self.surrogates        
         conditions = state.conditions
-
-        # unpack
+        
+        # unpack        
         q    = conditions.freestream.dynamic_pressure
         AoA  = conditions.aerodynamics.angle_of_attack
         Sref = geometry.reference_area
-
+        
         wings_lift_model = surrogates.lift_coefficient
-
+        
         # inviscid lift of wings only
         inviscid_wings_lift                                              = Data()
         inviscid_wings_lift.total                                        = wings_lift_model(AoA)
@@ -170,7 +170,7 @@ class Vortex_Lattice(Aerodynamics):
         state.conditions.aerodynamics.lift_coefficient                   = inviscid_wings_lift.total
         
         # store model for lift coefficients of each wing
-        state.conditions.aerodynamics.lift_coefficient_wing             = Data()
+        state.conditions.aerodynamics.lift_coefficient_wing             = Data()        
         for wing in geometry.wings.keys():
             wings_lift_model = surrogates.wing_lift_coefficients[wing]
             inviscid_wings_lift[wing] = wings_lift_model(AoA)
@@ -206,7 +206,7 @@ class Vortex_Lattice(Aerodynamics):
         geometry = self.geometry
         settings = self.settings
         training = self.training
-
+        
         AoA = training.angle_of_attack
         CL  = np.zeros_like(AoA)
         
@@ -271,7 +271,7 @@ class Vortex_Lattice(Aerodynamics):
         
         # learn the model
         cl_surrogate = np.poly1d(np.polyfit(X_data, CL_data ,1))
-
+        
         wing_cl_surrogates = Data()
         
         for wing in wing_CL_data.keys():

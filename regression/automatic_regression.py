@@ -61,6 +61,7 @@ modules = [
     'scripts/industrial_costs/industrial_costs.py',
     'scripts/landing_field_length/landing_field_length.py',
     'scripts/lifting_line/lifting_line.py',
+    'scripts/airfoil_import/airfoil_import_test.py',
     'scripts/multifidelity/optimize_mf.py',
     'scripts/noise_optimization/Noise_Test.py',
     'scripts/payload_range/payload_range.py',
@@ -83,7 +84,8 @@ modules = [
     'scripts/test_input_output/test_freemind_write.py',    
     'scripts/variable_cruise_distance/variable_cruise_distance.py',
     'scripts/weights/weights.py',  
-    'scripts/plots/test_plot.py',  
+    #'scripts/VTOLs/mission_QuadShot.py',  
+    #'scripts/VTOLs/test_VTOLs.py',  
     'scripts/V_n_diagram/V_n_diagram_regression.py', 
 ]
 

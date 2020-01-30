@@ -114,7 +114,7 @@ class Unknown_Throttle(Aerodynamic):
         
         # Update Conditions
         iterate.conditions = Process()
-        iterate.conditions.differentials   = Methods.Common.Numerics.update_differentials_time
+        iterate.conditions.differentials   = Methods.Common.Numerics.update_differentials_time 
         iterate.conditions.acceleration    = Methods.Common.Frames.update_acceleration
         iterate.conditions.altitude        = Methods.Common.Aerodynamics.update_altitude
         iterate.conditions.atmosphere      = Methods.Common.Aerodynamics.update_atmosphere
@@ -127,7 +127,7 @@ class Unknown_Throttle(Aerodynamic):
         iterate.conditions.weights         = Methods.Common.Weights.update_weights
         iterate.conditions.forces          = Methods.Common.Frames.update_forces
         iterate.conditions.planet_position = Methods.Common.Frames.update_planet_position
-
+        
         # Solve Residuals
         iterate.residuals = Process()
         iterate.residuals.total_forces     = Methods.Climb.Common.residual_total_forces
