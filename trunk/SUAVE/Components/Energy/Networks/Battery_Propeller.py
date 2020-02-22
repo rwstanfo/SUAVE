@@ -14,7 +14,8 @@ import SUAVE
 # package imports
 import numpy as np
 from SUAVE.Components.Propulsors.Propulsor import Propulsor
-from SUAVE.Methods.Power.Battery.Discharge.thevenin_discharge import battery_performance_maps
+from SUAVE.Methods.Power.Battery.Discharge.chin_discharge  import chin_battery_performance_maps
+from SUAVE.Methods.Power.Battery.Discharge.zhang_discharge import zhang_battery_performance_maps
 
 from SUAVE.Core import Data
 
@@ -66,7 +67,7 @@ class Battery_Propeller(Propulsor):
         self.number_of_engines       = None
         self.voltage                 = None
         self.thrust_angle            = 0.0
-        self.dischage_model_fidelity = 1
+        self.dischage_model          = 1
         self.use_surrogate           = False
     
     # manage process with a driver function
@@ -110,8 +111,9 @@ class Battery_Propeller(Propulsor):
         battery            = self.battery
         D                  = numerics.time.differentiate    
         I                  = numerics.time.integrate        
-        dischage_fidelity  = self.dischage_model_fidelity 
-        battery_data       = battery_performance_maps() 
+        dischage_model     = self.dischage_model
+        chin_battery_data  = chin_battery_performance_maps() 
+        zhang_battery_data = zhang_battery_performance_maps() 
         num_engines        = self.number_of_engines
          
         # Set battery energy
@@ -125,13 +127,13 @@ class Battery_Propeller(Propulsor):
         battery.E_growth_factor     = conditions.propulsion.battery_capacity_fade_factor 
         battery.max_energy          = battery.initial_max_energy * battery.E_growth_factor       
  
-        if dischage_fidelity == 1: 
-            volts = state.unknowns.battery_voltage_under_load
+        if dischage_model == 1: 
+            volts                            = state.unknowns.battery_voltage_under_load
             battery.battery_thevenin_voltage = 0  
-            battery.temperature      = conditions.propulsion.battery_temperature             
-            battery.cell_temperature = battery.temperature
+            battery.temperature              = conditions.propulsion.battery_temperature             
+            battery.cell_temperature         = battery.temperature
             
-        elif dischage_fidelity == 2:  
+        elif dischage_model == 2:  
             n_series   = battery.module_config[0]  
             n_parallel = battery.module_config[1]
             n_total    = n_series * n_parallel  
@@ -148,10 +150,10 @@ class Battery_Propeller(Propulsor):
             R_0  = np.zeros_like(SOC)
             SOC[SOC<0] = 0
             for i in range(len(SOC)): 
-                V_oc[i] = battery_data.V_oc_interp(T_cell[i], SOC[i])[0]
-                C_Th[i] = battery_data.C_Th_interp(T_cell[i], SOC[i])[0]
-                R_Th[i] = battery_data.R_Th_interp(T_cell[i], SOC[i])[0]
-                R_0[i]  = battery_data.R_0_interp(T_cell[i], SOC[i])[0]  
+                V_oc[i] = chin_battery_data.V_oc_interp(T_cell[i], SOC[i])[0]
+                C_Th[i] = chin_battery_data.C_Th_interp(T_cell[i], SOC[i])[0]
+                R_Th[i] = chin_battery_data.R_Th_interp(T_cell[i], SOC[i])[0]
+                R_0[i]  = chin_battery_data.R_0_interp(T_cell[i], SOC[i])[0]  
                 
             dV_TH_dt =  np.dot(D,V_Th)
             Icell = V_Th/(R_Th * battery.R_growth_factor)  + C_Th*dV_TH_dt 
@@ -161,6 +163,26 @@ class Battery_Propeller(Propulsor):
             # Voltage under load:
             volts =  n_series*(V_oc - V_Th - (Icell * R_0)) 
         
+        elif dischage_model == 3:  
+            SOC             = state.unknowns.battery_state_of_charge  
+            V_Th            = state.unknowns.battery_thevenin_voltage   
+            
+            # look up tables 
+            for i in range(len(SOC)): 
+                V_oc[i] = zhang_battery_data(T_cell[i], SOC[i])[0] 
+            R_0    = 0.01483*SOC^2 -0.02518*SOC + 0.1036 
+            R_th   = -1.212 * np.exp^(-0.03383*SOC) + 1.258  
+            tau_th = 2.151  * np.exp^(2.132 * SOC) + 27.2  
+            C_th   = tau_th/R_th  
+            
+            dV_TH_dt =  np.dot(D,V_Th)
+            I_0 = V_Th/R_Th  + C_Th*dV_TH_dt 
+            R_0  = R_0 * R_growth_factor  
+        
+            # Voltage under load:
+            volts =  V_oc - V_Th - (I_0 * R_0)        
+            battery.volts = volts 
+            
         if discharge_flag:     
             # Run the avionics
             avionics.power()
@@ -215,7 +237,7 @@ class Battery_Propeller(Propulsor):
             battery.inputs.current  = esc.outputs.currentin*self.number_of_engines + avionics_payload_current
             battery.inputs.power_in = -(volts *esc.outputs.currentin*self.number_of_engines + avionics_payload_power)
             battery.inputs.voltage  = volts
-            battery.energy_discharge(numerics,fidelity = dischage_fidelity)          
+            battery.energy_discharge(numerics,dischange_model = dischage_fidelity)          
             
         else:  
             # link 
@@ -224,7 +246,7 @@ class Battery_Propeller(Propulsor):
             battery.inputs.voltage  = volts 
             Q = np.zeros_like(volts)
             F = np.zeros_like(volts)
-            battery.energy_charge(numerics,fidelity = dischage_fidelity)        
+            battery.energy_charge(numerics,dischange_model = dischage_fidelity)        
             conditions.propulsion.propeller_power_coefficient  = np.zeros_like(volts)
             conditions.propulsion.etap  = np.zeros_like(volts)
             conditions.propulsion.etam  = np.zeros_like(volts)
@@ -346,7 +368,7 @@ class Battery_Propeller(Propulsor):
         
         return    
     
-    def unpack_unknowns_thevenin(self,segment):  
+    def unpack_unknowns_chin(self,segment):  
         segment.state.conditions.propulsion.propeller_power_coefficient = segment.state.unknowns.propeller_power_coefficient
         segment.state.conditions.propulsion.battery_cell_temperature = segment.state.unknowns.battery_cell_temperature 
         segment.state.conditions.propulsion.battery_state_of_charge  = segment.state.unknowns.battery_state_of_charge
@@ -376,7 +398,7 @@ class Battery_Propeller(Propulsor):
         segment.state.residuals.network[:,3] = Temp_predict[:,0] - Temp_actual[:,0]
         
 
-    def unpack_unknowns_thevenin_charge(self,segment):  
+    def unpack_unknowns_chin_charge(self,segment):  
          
         segment.state.conditions.propulsion.battery_cell_temperature = segment.state.unknowns.battery_cell_temperature 
         segment.state.conditions.propulsion.battery_state_of_charge  = segment.state.unknowns.battery_state_of_charge
@@ -384,7 +406,7 @@ class Battery_Propeller(Propulsor):
 
         return
 
-    def residuals_thevenin_charge(self,segment):  
+    def residuals_chin_charge(self,segment):  
 
         # Unpack 
         SOC_actual  = segment.state.conditions.propulsion.state_of_charge

@@ -3,4 +3,5 @@
 # @ingroup Methods-Power-Battery
 
 from .datta_discharge    import datta_discharge
-from .thevenin_discharge import thevenin_discharge
+from .chin_discharge     import chin_discharge
+from .zhang_discharge    import zhang_discharge
